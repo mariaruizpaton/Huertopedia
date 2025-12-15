@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "21402074340",
+    "project_id": "huertopedia-963a8",
+    "storage_bucket": "huertopedia-963a8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:21402074340:android:a3614569c1fb905e3300f1",
+        "android_client_info": {
+          "package_name": "com.mariaruiz.huertopedia"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "21402074340-r9cne0sdceh44qjsotpjtj3achl5f05m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCh6BOv24EaqUNP-0LVk9mDsh4spvtmGJg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "21402074340-r9cne0sdceh44qjsotpjtj3achl5f05m.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
