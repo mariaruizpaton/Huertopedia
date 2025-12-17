@@ -9,13 +9,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
+private val GardenColorScheme = lightColorScheme(
+    primary = Color(0xFF4CAF50), // Verde para botones y elementos principales
+    background = Color(0xFFF0F4E8), // Fondo verde claro, como un campo fresco
+    surface = Color.White, // Blanco para las tarjetas y superficies
+    onPrimary = Color.White,
+    onBackground = Color(0xFF1C1B1F),
+    onSurface = Color(0xFF1C1B1F)
+)
 @Composable
 @Preview
 fun App() {
-    MaterialTheme {
+    MaterialTheme(colorScheme = GardenColorScheme) {
         var name by remember { mutableStateOf("") }
         var email by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
