@@ -1,17 +1,17 @@
 package com.mariaruiz.huertopedia
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.ui.tooling.preview.Preview
+
+import com.mariaruiz.huertopedia.screens.HomeScreen
+import com.mariaruiz.huertopedia.screens.LoginScreen
+import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
+
 
 // ... (El colorScheme y el enum FormState se mantienen igual)
 private val GardenColorScheme = lightColorScheme(
@@ -23,135 +23,42 @@ private val GardenColorScheme = lightColorScheme(
     onSurface = Color(0xFF1C1B1F)
 )
 
-private enum class FormState {
-    LOGIN,
-    REGISTER
-}
-
 @Composable
 @Preview
-fun LogIn() {
+fun LogIn(
+    // Pasamos una función que recibe un "callback" (onResult)
+    // Cuando Android termine el login, llamará a 'onResult(true)' si fue bien.
+    onGoogleLogin: (onResult: (Boolean) -> Unit) -> Unit = { _ -> },
+    // NUEVO PARÁMETRO: Una función que nos deja configurar el ViewModel desde fuera
+    onSetupViewModel: (LoginViewModel) -> Unit = {}
+) {
     MaterialTheme(colorScheme = GardenColorScheme) {
-        var email by remember { mutableStateOf("") }
-        var password by remember { mutableStateOf("") }
-        var name by remember { mutableStateOf("") }
-        var currentForm by remember { mutableStateOf(FormState.LOGIN) } // Estado inicial: Login
+        val viewModel = remember { LoginViewModel() }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                if (currentForm == FormState.LOGIN) "Iniciar Sesión" else "Crear Cuenta",
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.primary
+        // 2. IMPORTANTE: Llamamos a la configuración nada más crear el ViewModel
+        // Esto conecta los cables del Paso 2 con el Paso 1
+        LaunchedEffect(Unit) {
+            onSetupViewModel(viewModel)
+        }
+
+        if (viewModel.isLoggedIn) {
+            HomeScreen(onLogout = { viewModel.logout() })
+        } else {
+            LoginScreen(
+                viewModel = viewModel,
+                onGoogleLoginRequest = {
+                    // Llamamos a la parte nativa y le decimos:
+                    // "Cuando termines, ejecuta este bloque"
+                    onGoogleLogin { success ->
+                        if (success) {
+                            // Solo si el login fue real y exitoso, entramos
+                            viewModel.onGoogleLogin() // Esto pone isLoggedIn = true
+                        } else {
+                            println("El usuario canceló o falló el login")
+                        }
+                    }
+                }
             )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Botones para cambiar entre Iniciar Sesión y Registrarse
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
-            ) {
-                Button(
-                    onClick = { currentForm = FormState.LOGIN },
-                    colors = if (currentForm == FormState.LOGIN) ButtonDefaults.buttonColors() else ButtonDefaults.outlinedButtonColors()
-                ) {
-                    Text("Iniciar sesión")
-                }
-                Button(
-                    onClick = { currentForm = FormState.REGISTER },
-                    colors = if (currentForm == FormState.REGISTER) ButtonDefaults.buttonColors() else ButtonDefaults.outlinedButtonColors()
-                ) {
-                    Text("Registrarse")
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Recuadro para el formulario
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    // El campo de Nombre solo aparece si estamos en modo REGISTRO
-                    if (currentForm == FormState.REGISTER) {
-                        OutlinedTextField(
-                            value = name,
-                            onValueChange = { name = it },
-                            label = { Text("Nombre") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text("Email") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // El campo de contraseña solo aparece si estamos en modo REGISTRO
-                    // o si estamos en LOGIN. Ahora es visible en ambos.
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        label = { Text("Contraseña") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Botón de acción principal (Confirmar Inicio de Sesión o Registro)
-            Button(
-                onClick = {
-                    if (currentForm == FormState.LOGIN) {
-                        // TODO: Lógica de inicio de sesión con email y contraseña
-                    } else {
-                        // TODO: Lógica para registrar al nuevo usuario
-                    }
-                },
-                modifier = Modifier.fillMaxWidth().height(48.dp)
-            ) {
-                Text(
-                    if (currentForm == FormState.LOGIN) "Acceder" else "Confirmar Registro",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Divider(modifier = Modifier.weight(1f))
-                Text(
-                    "o",
-                    modifier = Modifier.padding(horizontal = 8.dp),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
-                Divider(modifier = Modifier.weight(1f))
-            }
-
-            // Botón de Iniciar Sesión con Google (versión texto)
-            OutlinedButton(
-                onClick = { /* TODO: Lógica de inicio de sesión con Google */ },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                // Aquí podrías añadir la imagen del logo si la tienes en tus recursos
-                // Image(painter = painterResource(Res.drawable.google_logo), ...)
-                Text("Continuar con Google")
-            }
         }
     }
 }

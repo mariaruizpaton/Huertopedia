@@ -1,3 +1,4 @@
+import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -5,11 +6,13 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.googleGmsGoogleServices)
+    //alias(libs.plugins.googleGmsGoogleServices)
+    id("com.google.gms.google-services")
 }
 
 kotlin {
     androidTarget {
+        @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
         }
@@ -29,6 +32,12 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+
+            implementation(project.dependencies.platform("com.google.firebase:firebase-bom:33.1.0"))
+
+            implementation("com.google.firebase:firebase-auth")
+            implementation("com.google.android.gms:play-services-auth:21.2.0")
+            implementation("com.google.firebase:firebase-firestore")
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -75,21 +84,6 @@ android {
 }
 
 dependencies {
-    implementation(libs.firebase.auth)
-    implementation(libs.androidx.credentials)
-    implementation(libs.androidx.credentials.play.services.auth)
-    implementation(libs.googleid)
-    implementation(libs.firebase.firestore)
     debugImplementation(compose.uiTooling)
-
-    // Firebase Authentication
-    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
-    implementation("com.google.firebase:firebase-auth")
-
-    // Google Sign-In con Credential Manager (enfoque recomendado)
-    implementation("androidx.credentials:credentials:1.5.0")
-    implementation("androidx.credentials:credentials-play-services-auth:1.5.0")
-    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
-    implementation("com.google.android.gms:play-services-auth:21.2.0")
 }
 
