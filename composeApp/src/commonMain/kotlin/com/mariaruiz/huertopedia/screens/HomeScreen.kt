@@ -3,7 +3,6 @@ package com.mariaruiz.huertopedia.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -14,14 +13,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,14 +33,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
 import com.mariaruiz.huertopedia.theme.GardenGreen
+import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
 
 @Composable
 fun HomeScreen(
     onLogout: () -> Unit,
-    viewModel: LoginViewModel
+    viewModel: LoginViewModel,
+    navigateToGardenManagement: () -> Unit,
+    navigateToWiki: () -> Unit
 ) {
+    var showMenu by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             Box(
@@ -45,15 +53,29 @@ fun HomeScreen(
                     .padding(16.dp),
                 contentAlignment = Alignment.TopEnd
             ) {
-                // Sustituimos el Icon por un Box con un emoji para evitar el error de librerías
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(Color.LightGray.copy(alpha = 0.3f), CircleShape)
-                        .clickable { onLogout() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("👤", fontSize = 20.sp)
+                Box {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(Color.LightGray.copy(alpha = 0.3f), CircleShape)
+                            .clickable { showMenu = true },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("👤", fontSize = 20.sp)
+                    }
+
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Cerrar sesión") },
+                            onClick = {
+                                onLogout()
+                                showMenu = false
+                            }
+                        )
+                    }
                 }
             }
         },
@@ -68,7 +90,7 @@ fun HomeScreen(
         ) {
             // Cabecera
             Text(
-                text = "¡Hola, Usuario!",
+                text = "¡Hola, ${viewModel.name}!".trim(), // .trim() para limpiar espacios
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
@@ -85,7 +107,8 @@ fun HomeScreen(
             HomeCard(
                 title = "Gestión del Huerto",
                 description = "Mira tus parcelas 2x4 y registra actividades",
-                iconEmoji = "🪴"
+                iconEmoji = "🪴",
+                onClick = navigateToGardenManagement
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -94,7 +117,8 @@ fun HomeScreen(
             HomeCard(
                 title = "Enciclopedia de Cultivos",
                 description = "Información sobre tomates, lechugas y más",
-                iconEmoji = "📖"
+                iconEmoji = "📖",
+                onClick = navigateToWiki
             )
 
             Spacer(modifier = Modifier.weight(1f))
@@ -130,10 +154,13 @@ fun HomeScreen(
 fun HomeCard(
     title: String,
     description: String,
-    iconEmoji: String
+    iconEmoji: String,
+    onClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
