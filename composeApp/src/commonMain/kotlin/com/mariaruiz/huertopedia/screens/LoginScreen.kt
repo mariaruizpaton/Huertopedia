@@ -145,12 +145,14 @@ fun LoginScreen(
             Column(modifier = Modifier.padding(16.dp)) {
                 AnimatedVisibility(visible = viewModel.isRegisterMode) {
                     Column {
-                        OutlinedTextField(
-                            value = viewModel.name,
-                            onValueChange = { viewModel.name = it },
-                            label = { Text("Nombre") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                        viewModel.name?.let {
+                            OutlinedTextField(
+                                value = it,
+                                onValueChange = { viewModel.name = it },
+                                label = { Text("Nombre") },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                 }

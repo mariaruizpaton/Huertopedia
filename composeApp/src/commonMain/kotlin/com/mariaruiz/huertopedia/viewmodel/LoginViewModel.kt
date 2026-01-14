@@ -6,7 +6,7 @@ import androidx.compose.runtime.setValue
 
 class LoginViewModel {
     // --- ESTADO (Variables) ---
-    var name by mutableStateOf("")
+    var name by mutableStateOf<String?>(null)
     var email by mutableStateOf("")
     var password by mutableStateOf("")
 
@@ -22,7 +22,7 @@ class LoginViewModel {
     // Estas variables se rellenarán desde fuera (MainActivity)
 
     // Función para registrar: (email, password, nombre) -> callback(exito, error)
-    var onRegisterRequested: ((String, String, String, (Boolean, String?) -> Unit) -> Unit)? = null
+    var onRegisterRequested: ((String, String, String?, (Boolean, String?) -> Unit) -> Unit)? = null
 
     // Función para login: (email, password) -> callback(exito, error)
     var onLoginRequested: ((String, String, (Boolean, String?) -> Unit) -> Unit)? = null
@@ -36,7 +36,7 @@ class LoginViewModel {
     fun onAceptarClick() {
         errorMessage = null // Limpiamos errores previos
 
-        if (name.isBlank() && isRegisterMode) {
+        if (name?.isBlank() == true && isRegisterMode) {
             errorMessage = "El nombre no puede estar vacío"
             return
         }

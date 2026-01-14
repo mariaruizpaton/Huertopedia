@@ -69,13 +69,34 @@ class MainActivity : ComponentActivity() {
                     launcher.launch(googleSignInClient.signInIntent)
                 },
                 onSetupViewModel = { viewModel ->
-                    // Esto se ejecuta una sola vez al iniciar el ViewModel
                     val currentUser = auth.currentUser
+
                     if (currentUser != null) {
                         viewModel.isLoggedIn = true
+
+                        // --- NUEVO CÓDIGO: OBTENER EL NOMBRE ---
+
+                        // CASO 1: Intentar obtener el nombre directo de la cuenta (Google suele tenerlo)
+                        val nameFromAuth = currentUser.displayName
+
+                        if (!nameFromAuth.isNullOrEmpty()) {
+                            viewModel.name = nameFromAuth
+                            Log.d("UserCheck", "Nombre obtenido de Auth: $nameFromAuth")
+                        } else {
+                            // CASO 2: Si es null (común en email/pass), lo buscamos en tu Firestore
+                            db.collection("usuario").document(currentUser.uid)
+                                .get()
+                                .addOnSuccessListener { document ->
+                                    if (document.exists()) {
+                                        val nameFromDb = document.getString("nombre")
+                                        viewModel.name = nameFromDb
+                                        Log.d("UserCheck", "Nombre obtenido de Firestore: $nameFromDb")
+                                    }
+                                }
+                        }
                     }
 
-                    // Lógica de registro/login email... (tu código actual está bien aquí)
+                    // Configuración estándar
                     setupViewModelLogic(viewModel, auth, db, googleSignInClient)
                 }
             )

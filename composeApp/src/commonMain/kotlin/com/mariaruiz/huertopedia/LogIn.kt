@@ -42,7 +42,7 @@ fun LogIn(
         }
 
         if (viewModel.isLoggedIn) {
-            HomeScreen(onLogout = { viewModel.logout() })
+            HomeScreen(onLogout = { viewModel.logout() }, viewModel = viewModel)
         } else {
             LoginScreen(
                 viewModel = viewModel,

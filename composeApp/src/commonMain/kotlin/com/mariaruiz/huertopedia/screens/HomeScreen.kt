@@ -14,10 +14,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
 
 @Composable
 fun HomeScreen(
-    onLogout: () -> Unit // Recibimos la acción de cerrar sesión como parámetro
+    onLogout: () -> Unit,
+    viewModel: LoginViewModel
 ) {
     Column(
         modifier = Modifier
@@ -27,7 +29,7 @@ fun HomeScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "¡Has iniciado sesión correctamente!",
+            text = "¡Hola, ${viewModel.name}!",
             style = MaterialTheme.typography.headlineMedium,
             color = Color.Black
         )
