@@ -50,7 +50,8 @@ fun HomeScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(top = 15.dp)
+                    .padding(20.dp),
                 contentAlignment = Alignment.TopEnd
             ) {
                 Box {

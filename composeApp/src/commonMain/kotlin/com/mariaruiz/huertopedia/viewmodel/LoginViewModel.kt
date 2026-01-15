@@ -3,39 +3,30 @@ package com.mariaruiz.huertopedia.viewmodel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class LoginViewModel {
-    // --- ESTADO (Variables) ---
     var name by mutableStateOf<String?>(null)
     var email by mutableStateOf("")
     var password by mutableStateOf("")
-
-    // Controla si mostramos el formulario de Registro o de Iniciar Sesión
     var isRegisterMode by mutableStateOf(false)
 
-    // Controla si el usuario ya ha entrado correctamente
-    var isLoggedIn by mutableStateOf(false)
+    private val _isLoggedIn = MutableStateFlow(false)
+    val isLoggedIn = _isLoggedIn.asStateFlow()
 
-    // Variable para mostrar errores en pantalla si algo falla
+    fun setLoggedIn(isLoggedIn: Boolean) {
+        _isLoggedIn.value = isLoggedIn
+    }
+
     var errorMessage by mutableStateOf<String?>(null)
 
-    // Estas variables se rellenarán desde fuera (MainActivity)
-
-    // Función para registrar: (email, password, nombre) -> callback(exito, error)
     var onRegisterRequested: ((String, String, String?, (Boolean, String?) -> Unit) -> Unit)? = null
-
-    // Función para login: (email, password) -> callback(exito, error)
     var onLoginRequested: ((String, String, (Boolean, String?) -> Unit) -> Unit)? = null
-
-    // Es una función que no recibe nada y no devuelve nada
     var onLogoutRequested: (() -> Unit)? = null
 
-
-    // --- LÓGICA (Funciones) ---
-
     fun onAceptarClick() {
-        errorMessage = null // Limpiamos errores previos
-
+        errorMessage = null
         if (name?.isBlank() == true && isRegisterMode) {
             errorMessage = "El nombre no puede estar vacío"
             return
@@ -47,22 +38,16 @@ class LoginViewModel {
 
         if (isRegisterMode) {
             println("Solicitando registro a Android...")
-            // Llamamos a la función "hueca" que Android rellenará
             onRegisterRequested?.invoke(email, password, name) { success, error ->
-                if (success) {
-                    isLoggedIn = true
-                } else {
+                if (!success) {
                     errorMessage = "Error en registro: $error"
                     println(errorMessage)
                 }
             }
         } else {
             println("Solicitando login a Android...")
-            // Llamamos a la función de login
             onLoginRequested?.invoke(email, password) { success, error ->
-                if (success) {
-                    isLoggedIn = true
-                } else {
+                if (!success) {
                     errorMessage = "Error en login: $error"
                     println(errorMessage)
                 }
@@ -70,31 +55,15 @@ class LoginViewModel {
         }
     }
 
-    // --- MODIFICA TU FUNCIÓN LOGOUT ---
     fun logout() {
-        // Ejecutamos la lógica de Firebase que definimos en MainActivity
         onLogoutRequested?.invoke()
-
-        // Limpiamos el estado visual
-        isLoggedIn = false
-        name = ""
         email = ""
         password = ""
         errorMessage = null
-
         println("Sesión cerrada y datos limpiados")
     }
 
     fun onGoogleLogin() {
-        // Aquí solo actualizamos el estado, la lógica nativa se llama desde fuera
-        isLoggedIn = true
+        // La lógica de login está en MainActivity y el estado se actualiza con el AuthStateListener.
     }
-
-    // En LoginViewModel.kt
-    fun checkUserSession(isAuthenticated: Boolean) {
-        if (isAuthenticated) {
-            isLoggedIn = true
-        }
-    }
-
 }

@@ -44,8 +44,6 @@ class MainActivity : ComponentActivity() {
                             if (!authTask.isSuccessful) {
                                 Log.e("FirebaseLogin", "Error", authTask.exception)
                             }
-                            // El AuthStateListener se encargará de actualizar el estado de la UI.
-                            // Esta llamada solo notifica al composable que la operación ha terminado.
                             onLoginResultCallback?.invoke(authTask.isSuccessful)
                         }
                 } catch (e: ApiException) {
@@ -54,29 +52,23 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            LogIn(
+            App(
                 onGoogleLogin = { callbackDeVuelta ->
                     Log.d("DEBUG_APP", "Lanzando ventana de Google...")
                     onLoginResultCallback = callbackDeVuelta
                     launcher.launch(googleSignInClient.signInIntent)
                 },
                 onSetupViewModel = { viewModel ->
-                    // El AuthStateListener es la fuente de verdad para el estado de autenticación.
                     auth.addAuthStateListener { firebaseAuth ->
                         val user = firebaseAuth.currentUser
+                        viewModel.setLoggedIn(user != null)
                         if (user != null) {
-                            // Usuario ha iniciado sesión
-                            viewModel.isLoggedIn = true
-
                             val userDocRef = db.collection("usuario").document(user.uid)
                             userDocRef.get().addOnSuccessListener { document ->
                                 if (document.exists()) {
-                                    // El usuario ya existe en Firestore, obtenemos su nombre.
                                     viewModel.name = document.getString("nombre")
                                     Log.d("AuthState", "Usuario encontrado en Firestore. Nombre: ${viewModel.name}")
                                 } else {
-                                    // El usuario no está en Firestore (nuevo con Google).
-                                    // Usamos su nombre de Google y lo guardamos.
                                     val nameFromAuth = user.displayName
                                     viewModel.name = nameFromAuth
                                     Log.d("AuthState", "Nuevo usuario de Google. Nombre: $nameFromAuth")
@@ -87,18 +79,14 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             }.addOnFailureListener { e ->
-                                // Si falla la lectura de Firestore, usamos el nombre de Google como fallback.
                                 Log.e("AuthState", "Error al leer Firestore, fallback a displayName", e)
                                 viewModel.name = user.displayName
                             }
                         } else {
-                            // Usuario ha cerrado sesión
-                            viewModel.isLoggedIn = false
                             viewModel.name = null
                             Log.d("AuthState", "Usuario ha cerrado sesión.")
                         }
                     }
-                    // Configura las acciones que la UI puede solicitar.
                     setupViewModelLogic(viewModel, auth, db, googleSignInClient)
                 }
             )
@@ -112,7 +100,6 @@ class MainActivity : ComponentActivity() {
                     val uid = auth.currentUser?.uid
                     val userData = hashMapOf("nombre" to nombre, "email" to email)
                     if (uid != null) db.collection("usuario").document(uid).set(userData)
-                    // El AuthStateListener se encargará de actualizar el estado.
                     onResult(true, null)
                 } else {
                     onResult(false, task.exception?.message)
@@ -122,8 +109,6 @@ class MainActivity : ComponentActivity() {
 
         viewModel.onLoginRequested = { email, password, onResult ->
             auth.signInWithEmailAndPassword(email, password).addOnCompleteListener { task ->
-                // El AuthStateListener se encargará de actualizar el estado.
-                // Solo notificamos el resultado de la operación.
                 onResult(task.isSuccessful, task.exception?.message)
             }
         }
@@ -131,7 +116,6 @@ class MainActivity : ComponentActivity() {
         viewModel.onLogoutRequested = {
             auth.signOut()
             googleClient.signOut()
-            // El AuthStateListener se encargará de actualizar el estado.
         }
     }
 }

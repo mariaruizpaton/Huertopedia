@@ -4,6 +4,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,17 +35,17 @@ enum class Screen {
 
 @Composable
 @Preview
-fun LogIn(
+fun App(
     onGoogleLogin: (onResult: (Boolean) -> Unit) -> Unit = { _ -> },
     onSetupViewModel: (LoginViewModel) -> Unit = {}
 ) {
     MaterialTheme(colorScheme = GardenColorScheme) {
         val viewModel = remember { LoginViewModel() }
+        val isLoggedIn by viewModel.isLoggedIn.collectAsState()
         var currentScreen by remember { mutableStateOf(Screen.Login) }
 
-        // Si el usuario cierra sesión, volvemos a la pantalla de login
-        if (!viewModel.isLoggedIn) {
-            currentScreen = Screen.Login
+        LaunchedEffect(isLoggedIn) {
+            currentScreen = if (isLoggedIn) Screen.Home else Screen.Login
         }
 
         LaunchedEffect(Unit) {
@@ -78,13 +79,15 @@ fun LogIn(
             Screen.Wiki -> {
                 WikiScreen(
                     onLogout = { viewModel.logout() },
-                    viewModel = viewModel,
-                    //onNavigateBack = { currentScreen = Screen.Home }
+                    onBack = { currentScreen = Screen.Home },
+                    viewModel = viewModel
                 )
             }
             Screen.GardenManagement -> {
                 GardenScreen(
-                    //onNavigateBack = { currentScreen = Screen.Home }
+                    onLogout = { viewModel.logout() },
+                    onBack = { currentScreen = Screen.Home },
+                    viewModel = viewModel
                 )
             }
         }
