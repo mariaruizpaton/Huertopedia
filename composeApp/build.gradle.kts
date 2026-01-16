@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
     //alias(libs.plugins.googleGmsGoogleServices)
     id("com.google.gms.google-services")
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 kotlin {
@@ -17,7 +18,7 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
-    
+
     listOf(
         iosArm64(),
         iosSimulatorArm64()
@@ -27,7 +28,7 @@ kotlin {
             isStatic = true
         }
     }
-    
+
     sourceSets {
         androidMain.dependencies {
             implementation(compose.preview)
@@ -49,6 +50,14 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(compose.materialIconsExtended)
+            implementation("media.kamel:kamel-image:0.9.3")
+            implementation(libs.firebase.firestore.multiplatform)
+            implementation(libs.firebase.auth.multiplatform)
+            implementation(libs.firebase.storage.multiplatform)
+            implementation("dev.gitlive:firebase-auth:1.8.1")
+            implementation("dev.gitlive:firebase-firestore:1.8.1")
+            implementation(libs.kotlinx.serialization.core)
+            implementation("io.ktor:ktor-client-okhttp:2.3.8")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -84,6 +93,6 @@ android {
 }
 
 dependencies {
+    implementation(libs.firebase.storage)
     debugImplementation(compose.uiTooling)
 }
-

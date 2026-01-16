@@ -13,6 +13,9 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
     }
+    plugins {
+        id("dev.gitlive.firebase.plugin") version "1.13.0" apply false
+    }
 }
 
 dependencyResolutionManagement {

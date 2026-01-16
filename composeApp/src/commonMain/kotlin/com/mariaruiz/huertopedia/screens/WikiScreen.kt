@@ -1,6 +1,5 @@
 package com.mariaruiz.huertopedia.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -37,17 +36,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import com.mariaruiz.huertopedia.utils.BackHandler
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mariaruiz.huertopedia.model.Plant
+import com.mariaruiz.huertopedia.utils.BackHandler
 import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
 import com.mariaruiz.huertopedia.viewmodel.WikiViewModel
+import io.kamel.image.KamelImage
+import io.kamel.image.asyncPainterResource
 import org.jetbrains.compose.resources.ExperimentalResourceApi
-import org.jetbrains.compose.resources.painterResource
 
-@OptIn(ExperimentalResourceApi::class, ExperimentalMaterial3Api::class,
+@OptIn(
+    ExperimentalResourceApi::class, ExperimentalMaterial3Api::class,
     ExperimentalComposeUiApi::class
 )
 @Composable
@@ -55,7 +56,7 @@ fun WikiScreen(
     onLogout: () -> Unit,
     onBack: () -> Unit,
     viewModel: LoginViewModel,
-    wikiViewModel: WikiViewModel = WikiViewModel()
+    wikiViewModel: WikiViewModel = remember { WikiViewModel() }
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("Todo") }
@@ -117,20 +118,6 @@ fun WikiScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun FilterChip(
-    text: String,
-    selectedFilter: String,
-    onClick: () -> Unit
-) {
-    FilterChip(
-        selected = text == selectedFilter,
-        onClick = onClick,
-        label = { Text(text) }
-    )
-}
-
 @Composable
 fun PlantCard(plant: Plant) {
     Card(
@@ -146,10 +133,10 @@ fun PlantCard(plant: Plant) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            plant.imageRes?.let { res ->
-                Image(
-                    painter = painterResource(res),
-                    contentDescription = plant.name,
+            plant.imagen_url?.let { url ->
+                KamelImage(
+                    resource = asyncPainterResource(data = url),
+                    contentDescription = plant.nombre_comun,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.size(100.dp)
                 )
@@ -158,12 +145,12 @@ fun PlantCard(plant: Plant) {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = plant.name,
+                text = plant.nombre_comun,
                 textAlign = TextAlign.Center
             )
 
             Text(
-                text = plant.scientificName,
+                text = plant.categoria,
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.bodySmall
             )
