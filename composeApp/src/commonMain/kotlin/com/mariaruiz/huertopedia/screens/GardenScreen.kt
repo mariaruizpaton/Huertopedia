@@ -12,11 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import com.mariaruiz.huertopedia.utils.BackHandler
 import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
-import org.jetbrains.compose.resources.ExperimentalResourceApi
 
-@OptIn(ExperimentalResourceApi::class, ExperimentalMaterial3Api::class,
-    ExperimentalComposeUiApi::class
-)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun GardenScreen(
     onLogout: () -> Unit,

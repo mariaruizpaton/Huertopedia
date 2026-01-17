@@ -18,8 +18,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // 1. Configuración de Google Sign-In
         val webClientId = "21402074340-r9cne0sdceh44qjsotpjtj3achl5f05m.apps.googleusercontent.com"
-
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(webClientId)
             .requestEmail()
@@ -28,6 +28,7 @@ class MainActivity : ComponentActivity() {
         val googleSignInClient = GoogleSignIn.getClient(this, gso)
         val auth = FirebaseAuth.getInstance()
         val db = FirebaseFirestore.getInstance()
+        // NOTA: Ya no necesitamos FirebaseStorage aquí, el ViewModel se encarga internamente.
 
         setContent {
             var onLoginResultCallback: ((Boolean) -> Unit)? = null
@@ -59,6 +60,7 @@ class MainActivity : ComponentActivity() {
                     launcher.launch(googleSignInClient.signInIntent)
                 },
                 onSetupViewModel = { viewModel ->
+                    // Lógica de Login (Se mantiene igual)
                     auth.addAuthStateListener { firebaseAuth ->
                         val user = firebaseAuth.currentUser
                         viewModel.setLoggedIn(user != null)
@@ -67,33 +69,33 @@ class MainActivity : ComponentActivity() {
                             userDocRef.get().addOnSuccessListener { document ->
                                 if (document.exists()) {
                                     viewModel.name = document.getString("nombre")
-                                    Log.d("AuthState", "Usuario encontrado en Firestore. Nombre: ${viewModel.name}")
+                                    Log.d("AuthState", "Usuario encontrado: ${viewModel.name}")
                                 } else {
                                     val nameFromAuth = user.displayName
                                     viewModel.name = nameFromAuth
-                                    Log.d("AuthState", "Nuevo usuario de Google. Nombre: $nameFromAuth")
-
+                                    Log.d("AuthState", "Nuevo usuario: $nameFromAuth")
                                     val userData = hashMapOf("nombre" to nameFromAuth, "email" to user.email)
-                                    userDocRef.set(userData).addOnFailureListener { e ->
-                                        Log.e("AuthState", "Error al guardar nuevo usuario en Firestore", e)
-                                    }
+                                    userDocRef.set(userData)
                                 }
-                            }.addOnFailureListener { e ->
-                                Log.e("AuthState", "Error al leer Firestore, fallback a displayName", e)
+                            }.addOnFailureListener {
                                 viewModel.name = user.displayName
                             }
                         } else {
                             viewModel.name = null
-                            Log.d("AuthState", "Usuario ha cerrado sesión.")
                         }
                     }
-                    setupViewModelLogic(viewModel, auth, db, googleSignInClient)
+                    setupLoginLogic(viewModel, auth, db, googleSignInClient)
+                },
+
+                // Pasamos una función vacía. El WikiViewModel ya carga los datos solo.
+                onSetupWikiViewModel = {
+                    // No hacer nada aquí. El ViewModel ya tiene un init { fetchPlants() }
                 }
             )
         }
     }
 
-    private fun setupViewModelLogic(viewModel: LoginViewModel, auth: FirebaseAuth, db: FirebaseFirestore, googleClient: com.google.android.gms.auth.api.signin.GoogleSignInClient) {
+    private fun setupLoginLogic(viewModel: LoginViewModel, auth: FirebaseAuth, db: FirebaseFirestore, googleClient: com.google.android.gms.auth.api.signin.GoogleSignInClient) {
         viewModel.onRegisterRequested = { email, password, nombre, onResult ->
             auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
                 if (task.isSuccessful) {

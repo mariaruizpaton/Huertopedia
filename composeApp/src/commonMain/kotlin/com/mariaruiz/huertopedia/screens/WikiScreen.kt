@@ -1,41 +1,19 @@
 package com.mariaruiz.huertopedia.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -45,12 +23,9 @@ import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
 import com.mariaruiz.huertopedia.viewmodel.WikiViewModel
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
-import org.jetbrains.compose.resources.ExperimentalResourceApi
 
-@OptIn(
-    ExperimentalResourceApi::class, ExperimentalMaterial3Api::class,
-    ExperimentalComposeUiApi::class
-)
+// Eliminado ExperimentalResourceApi del OptIn y de los imports
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun WikiScreen(
     onLogout: () -> Unit,
@@ -123,36 +98,55 @@ fun PlantCard(plant: Plant) {
     Card(
         modifier = Modifier
             .padding(8.dp)
-            .fillMaxWidth()
+            .fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            plant.imagen_url?.let { url ->
+            // RECUADRO DE IMAGEN / PLACEHOLDER
+            if (!plant.imagen_url.isNullOrBlank()) {
                 KamelImage(
-                    resource = asyncPainterResource(data = url),
+                    resource = asyncPainterResource(data = plant.imagen_url!!),
                     contentDescription = plant.nombre_comun,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.size(100.dp)
+                    modifier = Modifier.size(100.dp),
+                    onFailure = {
+                        Box(
+                            modifier = Modifier
+                                .size(100.dp)
+                                .background(Color.LightGray)
+                        )
+                    }
                 )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(100.dp)
+                        .background(Color.LightGray),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Sin foto", style = MaterialTheme.typography.labelSmall)
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = plant.nombre_comun,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.titleMedium
             )
 
             Text(
                 text = plant.categoria,
                 textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
             )
         }
     }
