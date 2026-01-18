@@ -5,13 +5,13 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Plant(
     val id: String = "",
-    val nombre_comun: String = "",
+    val nombreComun: String = "",
     val categoria: String = "",
-    val imagen_url: String? = null,
-    val dias_cosecha: Int = 0,
-    val frecuencia_riego: String = "",
-    val plantas_amigables: List<String> = emptyList(),
-    val plantas_enemigas: List<String> = emptyList(),
-    val temporada_siembra: List<String> = emptyList(),
-    val tipo_sustrato: String = ""
+    val imagenUrl: String? = null,
+    val diasCosecha: Int = 0,
+    val frecuenciaRiego: String = "",
+    val plantasAmigables: List<String> = emptyList(),
+    val plantasEnemigas: List<String> = emptyList(),
+    val temporadaSiembra: List<String> = emptyList(),
+    val tipoSustrato: String = ""
 )

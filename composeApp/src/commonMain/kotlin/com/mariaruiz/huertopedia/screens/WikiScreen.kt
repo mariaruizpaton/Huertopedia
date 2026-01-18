@@ -6,7 +6,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,19 +19,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mariaruiz.huertopedia.model.Plant
 import com.mariaruiz.huertopedia.utils.BackHandler
-import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
 import com.mariaruiz.huertopedia.viewmodel.WikiViewModel
+import huertopedia.composeapp.generated.resources.*
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
+import org.jetbrains.compose.resources.stringResource
 
-// Eliminado ExperimentalResourceApi del OptIn y de los imports
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun WikiScreen(
-    onLogout: () -> Unit,
     onBack: () -> Unit,
-    viewModel: LoginViewModel,
-    wikiViewModel: WikiViewModel = remember { WikiViewModel() }
+    wikiViewModel: WikiViewModel = remember { WikiViewModel() },
+    onPlantClick: (Plant) -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("Todo") }
@@ -48,10 +47,13 @@ fun WikiScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Wiki") },
+                title = { Text(stringResource(Res.string.wiki_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Atrás")
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(Res.string.detail_back)
+                        )
                     }
                 }
             )
@@ -62,18 +64,27 @@ fun WikiScreen(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    label = { Text("Buscar plantas...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search Icon") },
+                    label = { Text(stringResource(Res.string.wiki_search_placeholder)) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    val categories = listOf("Todo", "Hortalizas", "Frutas", "Hierbas")
-                    categories.forEach { category ->
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    val categories = listOf(
+                        stringResource(Res.string.wiki_cat_all) to "Todo",
+                        stringResource(Res.string.wiki_cat_veg) to "Hortalizas",
+                        stringResource(Res.string.wiki_cat_fruit) to "Frutas",
+                        stringResource(Res.string.wiki_cat_herbs) to "Hierbas"
+                    )
+                    categories.forEach { (label, value) ->
                         FilterChip(
-                            selected = category == selectedFilter,
-                            onClick = { selectedFilter = category },
-                            label = { Text(category) }
+                            selected = value == selectedFilter,
+                            onClick = { selectedFilter = value },
+                            label = { Text(label) }
                         )
                     }
                 }
@@ -86,19 +97,21 @@ fun WikiScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(plants) { plant ->
-                    PlantCard(plant)
+                    PlantCard(plant, onClick = { onPlantClick(plant) })
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlantCard(plant: Plant) {
+fun PlantCard(plant: Plant, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth(),
+        onClick = onClick,
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
@@ -108,11 +121,10 @@ fun PlantCard(plant: Plant) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // RECUADRO DE IMAGEN / PLACEHOLDER
-            if (!plant.imagen_url.isNullOrBlank()) {
+            if (!plant.imagenUrl.isNullOrBlank()) {
                 KamelImage(
-                    resource = asyncPainterResource(data = plant.imagen_url!!),
-                    contentDescription = plant.nombre_comun,
+                    resource = asyncPainterResource(data = plant.imagenUrl),
+                    contentDescription = plant.nombreComun,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.size(100.dp),
                     onFailure = {
@@ -130,16 +142,17 @@ fun PlantCard(plant: Plant) {
                         .background(Color.LightGray),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Sin foto", style = MaterialTheme.typography.labelSmall)
+                    Text(stringResource(Res.string.wiki_no_photo), style = MaterialTheme.typography.labelSmall)
                 }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = plant.nombre_comun,
+                text = plant.nombreComun,
                 textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1
             )
 
             Text(

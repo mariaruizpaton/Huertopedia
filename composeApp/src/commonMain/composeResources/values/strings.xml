@@ -1,0 +1,47 @@
+<resources>
+    <string name="app_name">Huertopedia</string>
+    
+    <!-- Login -->
+    <string name="login_welcome">Bienvenido</string>
+    <string name="login_create_account">Crear Cuenta</string>
+    <string name="login_google">Acceder con Google</string>
+    <string name="login_signin">Iniciar sesión</string>
+    <string name="login_register">Registrarse</string>
+    <string name="login_name">Nombre</string>
+    <string name="login_email">Email</string>
+    <string name="login_password">Contraseña</string>
+    <string name="login_accept">Aceptar</string>
+
+    <!-- Home -->
+    <string name="home_welcome">¡Hola, %1$s!</string>
+    <string name="home_subtitle">Tu huerto está creciendo hoy 🌿</string>
+    <string name="home_card_garden_title">Gestión del Huerto</string>
+    <string name="home_card_garden_desc">Mira tus parcelas 2x4 y registra actividades</string>
+    <string name="home_card_wiki_title">Enciclopedia de Cultivos</string>
+    <string name="home_card_wiki_desc">Información sobre tomates, lechugas y más</string>
+    <string name="home_last_activity">Última actividad registrada</string>
+    <string name="home_activity_sample">Ayer: Riego en Jardinera 1</string>
+    <string name="home_btn_logout">Cerrar sesión</string>
+
+    <!-- Wiki -->
+    <string name="wiki_title">Wiki</string>
+    <string name="wiki_search_placeholder">Buscar plantas...</string>
+    <string name="wiki_cat_all">Todo</string>
+    <string name="wiki_cat_veg">Hortalizas</string>
+    <string name="wiki_cat_fruit">Frutas</string>
+    <string name="wiki_cat_herbs">Hierbas</string>
+    <string name="wiki_no_photo">Sin foto</string>
+
+    <!-- Detalles -->
+    <string name="detail_title_page">Detalles de la planta</string>
+    <string name="detail_harvest">Cosecha</string>
+    <string name="detail_harvest_days">%1$s d</string>
+    <string name="detail_watering">Riego</string>
+    <string name="detail_soil">Sustrato recomendado</string>
+    <string name="detail_season">Temporada de siembra</string>
+    <string name="detail_friends">Plantas amigas</string>
+    <string name="detail_enemies">Plantas enemigas</string>
+    <string name="detail_not_specified">No especificado</string>
+    <string name="detail_none_known">Ninguna conocida</string>
+    <string name="detail_back">Volver</string>
+</resources>

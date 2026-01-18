@@ -1,4 +1,3 @@
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -48,12 +47,13 @@ kotlin {
             implementation("io.ktor:ktor-client-okhttp:2.3.8")
         }
         commonMain.dependencies {
+            implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(compose.materialIconsExtended)
-            implementation("media.kamel:kamel-image:0.9.3")
             implementation(compose.material3)
+            implementation("media.kamel:kamel-image:0.9.3")
 
             // --- IMPORTANTE: SOLO GITLIVE ---
             implementation("dev.gitlive:firebase-auth:1.11.1")

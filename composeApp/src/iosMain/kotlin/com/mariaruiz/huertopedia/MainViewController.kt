@@ -1,4 +1,3 @@
-// iosApp/src/iosMain/kotlin/.../MainViewController.kt
 package com.mariaruiz.huertopedia
 
 import androidx.compose.ui.window.ComposeUIViewController

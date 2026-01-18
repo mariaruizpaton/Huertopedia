@@ -35,6 +35,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mariaruiz.huertopedia.theme.GardenGreen
 import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
+import huertopedia.composeapp.generated.resources.Res
+import huertopedia.composeapp.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun HomeScreen(
@@ -70,7 +73,7 @@ fun HomeScreen(
                         onDismissRequest = { showMenu = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Cerrar sesión") },
+                            text = { Text(stringResource(Res.string.home_btn_logout)) },
                             onClick = {
                                 onLogout()
                                 showMenu = false
@@ -91,13 +94,13 @@ fun HomeScreen(
         ) {
             // Cabecera
             Text(
-                text = "¡Hola, ${viewModel.name}!".trim(), // .trim() para limpiar espacios
+                text = stringResource(Res.string.home_welcome, viewModel.name ?: "Usuario"),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
             Text(
-                text = "Tu huerto está creciendo hoy 🌿",
+                text = stringResource(Res.string.home_subtitle),
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color.Gray
             )
@@ -106,8 +109,8 @@ fun HomeScreen(
 
             // Tarjeta 1: Gestión del Huerto
             HomeCard(
-                title = "Gestión del Huerto",
-                description = "Mira tus parcelas 2x4 y registra actividades",
+                title = stringResource(Res.string.home_card_garden_title),
+                description = stringResource(Res.string.home_card_garden_desc),
                 iconEmoji = "🪴",
                 onClick = navigateToGardenManagement
             )
@@ -116,8 +119,8 @@ fun HomeScreen(
 
             // Tarjeta 2: Enciclopedia de Cultivos
             HomeCard(
-                title = "Enciclopedia de Cultivos",
-                description = "Información sobre tomates, lechugas y más",
+                title = stringResource(Res.string.home_card_wiki_title),
+                description = stringResource(Res.string.home_card_wiki_desc),
                 iconEmoji = "📖",
                 onClick = navigateToWiki
             )
@@ -126,7 +129,7 @@ fun HomeScreen(
 
             // Pie de página: Última actividad
             Text(
-                text = "Última actividad registrada",
+                text = stringResource(Res.string.home_last_activity),
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )
@@ -141,7 +144,7 @@ fun HomeScreen(
                 color = Color.White
             ) {
                 Text(
-                    text = "Ayer: Riego en Jardinera 1",
+                    text = stringResource(Res.string.home_activity_sample),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     color = GardenGreen,
                     style = MaterialTheme.typography.bodyMedium

@@ -1,0 +1,47 @@
+<resources>
+    <string name="app_name">Huertopedia</string>
+    
+    <!-- Login -->
+    <string name="login_welcome">Welcome</string>
+    <string name="login_create_account">Create Account</string>
+    <string name="login_google">Sign in with Google</string>
+    <string name="login_signin">Sign In</string>
+    <string name="login_register">Register</string>
+    <string name="login_name">Name</string>
+    <string name="login_email">Email</string>
+    <string name="login_password">Password</string>
+    <string name="login_accept">Accept</string>
+
+    <!-- Home -->
+    <string name="home_welcome">Hello, %1$s!</string>
+    <string name="home_subtitle">Your garden is growing today 🌿</string>
+    <string name="home_card_garden_title">Garden Management</string>
+    <string name="home_card_garden_desc">See your 2x4 plots and log activities</string>
+    <string name="home_card_wiki_title">Crop Encyclopedia</string>
+    <string name="home_card_wiki_desc">Information about tomatoes, lettuce and more</string>
+    <string name="home_last_activity">Last recorded activity</string>
+    <string name="home_activity_sample">Yesterday: Watering in Plot 1</string>
+    <string name="home_btn_logout">Logout</string>
+
+    <!-- Wiki -->
+    <string name="wiki_title">Wiki</string>
+    <string name="wiki_search_placeholder">Search plants...</string>
+    <string name="wiki_cat_all">All</string>
+    <string name="wiki_cat_veg">Vegetables</string>
+    <string name="wiki_cat_fruit">Fruits</string>
+    <string name="wiki_cat_herbs">Herbs</string>
+    <string name="wiki_no_photo">No photo</string>
+
+    <!-- Detalles -->
+    <string name="detail_title_page">Plant Details</string>
+    <string name="detail_harvest">Harvest</string>
+    <string name="detail_harvest_days">%1$s d</string>
+    <string name="detail_watering">Watering</string>
+    <string name="detail_soil">Recommended soil</string>
+    <string name="detail_season">Planting season</string>
+    <string name="detail_friends">Companion plants</string>
+    <string name="detail_enemies">Combative plants</string>
+    <string name="detail_not_specified">Not specified</string>
+    <string name="detail_none_known">None known</string>
+    <string name="detail_back">Back</string>
+</resources>

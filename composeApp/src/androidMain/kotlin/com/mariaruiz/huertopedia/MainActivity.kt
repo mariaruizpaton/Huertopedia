@@ -1,3 +1,4 @@
+@file:Suppress("DEPRECATION")
 package com.mariaruiz.huertopedia
 
 import android.os.Bundle
@@ -14,6 +15,7 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
 
+@Suppress("DEPRECATION")
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

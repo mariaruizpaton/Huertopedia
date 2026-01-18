@@ -62,8 +62,4 @@ class LoginViewModel {
         errorMessage = null
         println("Sesión cerrada y datos limpiados")
     }
-
-    fun onGoogleLogin() {
-        // La lógica de login está en MainActivity y el estado se actualiza con el AuthStateListener.
-    }
 }

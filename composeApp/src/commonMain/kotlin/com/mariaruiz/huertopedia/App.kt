@@ -1,23 +1,14 @@
 package com.mariaruiz.huertopedia
 
-// IMPORTS DE COMPOSE Y MATERIAL3 (Estos son los que te fallaban)
-import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
-
-// IMPORTS DE TUS PANTALLAS Y VIEWMODELS
-import com.mariaruiz.huertopedia.screens.GardenScreen
-import com.mariaruiz.huertopedia.screens.HomeScreen
-import com.mariaruiz.huertopedia.screens.LoginScreen
-import com.mariaruiz.huertopedia.screens.WikiScreen
+import com.mariaruiz.huertopedia.screens.*
 import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
 import com.mariaruiz.huertopedia.viewmodel.WikiViewModel
-
-// IMPORT DE PREVIEW
+import com.mariaruiz.huertopedia.model.Plant
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
-// COLORES (Definidos aquí para evitar fallos de imports externos)
 private val GardenColorScheme = lightColorScheme(
     primary = Color(0xFF4CAF50),
     background = Color(0xFFF0F4E8),
@@ -31,7 +22,8 @@ enum class Screen {
     Login,
     Home,
     Wiki,
-    GardenManagement
+    GardenManagement,
+    PlantDetail
 }
 
 @Composable
@@ -42,17 +34,16 @@ fun App(
     onSetupWikiViewModel: (WikiViewModel) -> Unit = {}
 ) {
     MaterialTheme(colorScheme = GardenColorScheme) {
-        // ViewModels
         val viewModel = remember { LoginViewModel() }
         val wikiViewModel = remember { WikiViewModel() }
 
-        // Estado
+        // Cambiamos 'by' por '=' para usar .value y eliminar los warnings del IDE
+        val selectedPlant = remember { mutableStateOf<Plant?>(null) }
         val isLoggedIn by viewModel.isLoggedIn.collectAsState()
-        var currentScreen by remember { mutableStateOf(Screen.Login) }
+        val currentScreen = remember { mutableStateOf(Screen.Login) }
 
-        // Efectos
         LaunchedEffect(isLoggedIn) {
-            currentScreen = if (isLoggedIn) Screen.Home else Screen.Login
+            currentScreen.value = if (isLoggedIn) Screen.Home else Screen.Login
         }
 
         LaunchedEffect(Unit) {
@@ -60,33 +51,43 @@ fun App(
             onSetupWikiViewModel(wikiViewModel)
         }
 
-        // Navegación
-        when (currentScreen) {
+        // Accedemos mediante .value
+        when (currentScreen.value) {
             Screen.Login -> LoginScreen(
                 viewModel = viewModel,
                 onGoogleLoginRequest = {
                     onGoogleLogin { success ->
-                        if (success) currentScreen = Screen.Home
+                        if (success) currentScreen.value = Screen.Home
                     }
                 }
             )
             Screen.Home -> HomeScreen(
                 onLogout = { viewModel.logout() },
                 viewModel = viewModel,
-                navigateToGardenManagement = { currentScreen = Screen.GardenManagement },
-                navigateToWiki = { currentScreen = Screen.Wiki }
+                navigateToGardenManagement = { currentScreen.value = Screen.GardenManagement },
+                navigateToWiki = { currentScreen.value = Screen.Wiki }
             )
             Screen.Wiki -> WikiScreen(
-                onLogout = { viewModel.logout() },
-                onBack = { currentScreen = Screen.Home },
-                viewModel = viewModel,
-                wikiViewModel = wikiViewModel
+                onBack = { currentScreen.value = Screen.Home },
+                wikiViewModel = wikiViewModel,
+                onPlantClick = { plant ->
+                    selectedPlant.value = plant
+                    currentScreen.value = Screen.PlantDetail
+                }
             )
             Screen.GardenManagement -> GardenScreen(
                 onLogout = { viewModel.logout() },
-                onBack = { currentScreen = Screen.Home },
+                onBack = { currentScreen.value = Screen.Home },
                 viewModel = viewModel
             )
+            Screen.PlantDetail -> {
+                selectedPlant.value?.let { plant ->
+                    PlantDetailScreen(
+                        plant = plant,
+                        onBack = { currentScreen.value = Screen.Wiki }
+                    )
+                }
+            }
         }
     }
 }
