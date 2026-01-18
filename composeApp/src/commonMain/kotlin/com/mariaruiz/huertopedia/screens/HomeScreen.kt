@@ -41,7 +41,8 @@ fun HomeScreen(
     onLogout: () -> Unit,
     viewModel: LoginViewModel,
     navigateToGardenManagement: () -> Unit,
-    navigateToWiki: () -> Unit
+    navigateToWiki: () -> Unit,
+    navigateToProfile : () -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
@@ -70,11 +71,8 @@ fun HomeScreen(
                         onDismissRequest = { showMenu = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Cerrar sesión") },
-                            onClick = {
-                                onLogout()
-                                showMenu = false
-                            }
+                            text = { Text("Ver peril") },
+                            onClick = navigateToProfile
                         )
                     }
                 }

@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import com.mariaruiz.huertopedia.screens.GardenScreen
 import com.mariaruiz.huertopedia.screens.HomeScreen
 import com.mariaruiz.huertopedia.screens.LoginScreen
+import com.mariaruiz.huertopedia.screens.UserScreen
 import com.mariaruiz.huertopedia.screens.WikiScreen
 import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -30,7 +31,8 @@ enum class Screen {
     Login,
     Home,
     Wiki,
-    GardenManagement
+    GardenManagement,
+    User
 }
 
 @Composable
@@ -73,7 +75,8 @@ fun App(
                     onLogout = { viewModel.logout() },
                     viewModel = viewModel,
                     navigateToGardenManagement = { currentScreen = Screen.GardenManagement },
-                    navigateToWiki = { currentScreen = Screen.Wiki }
+                    navigateToWiki = { currentScreen = Screen.Wiki },
+                    navigateToProfile = { currentScreen = Screen.User}
                 )
             }
             Screen.Wiki -> {
@@ -85,6 +88,13 @@ fun App(
             }
             Screen.GardenManagement -> {
                 GardenScreen(
+                    onLogout = { viewModel.logout() },
+                    onBack = { currentScreen = Screen.Home },
+                    viewModel = viewModel
+                )
+            }
+            Screen.User -> {
+                UserScreen(
                     onLogout = { viewModel.logout() },
                     onBack = { currentScreen = Screen.Home },
                     viewModel = viewModel
