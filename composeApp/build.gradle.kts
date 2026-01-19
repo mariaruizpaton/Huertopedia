@@ -1,3 +1,4 @@
+import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -39,14 +40,20 @@ kotlin {
 
             // Firebase nativo para Android (Login con Google requiere esto)
             implementation(project.dependencies.platform("com.google.firebase:firebase-bom:33.1.0"))
+
             implementation("com.google.firebase:firebase-auth")
             implementation("com.google.android.gms:play-services-auth:21.2.0")
             implementation("com.google.firebase:firebase-firestore")
 
             // Ktor Engine para Android (Java)
             implementation("io.ktor:ktor-client-okhttp:2.3.8")
+            implementation("com.google.firebase:firebase-storage") // <-- DEPENDENCIA AÑADIDA
         }
         commonMain.dependencies {
+            implementation(compose.runtime)
+            implementation(compose.foundation)
+            implementation(compose.material3)
+            implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
@@ -76,6 +83,13 @@ kotlin {
                 // Ktor Engine para iOS (Nativo Apple)
                 implementation("io.ktor:ktor-client-darwin:2.3.8")
             }
+            implementation("io.ktor:ktor-client-okhttp:2.3.8")
+            implementation("io.coil-kt:coil-compose:2.6.0")
+
+            // Unify Firebase KMP dependencies to a single version
+            implementation("dev.gitlive:firebase-auth:1.13.0")
+            implementation("dev.gitlive:firebase-firestore:1.13.0")
+            implementation("dev.gitlive:firebase-storage:1.13.0")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

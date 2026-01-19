@@ -23,7 +23,8 @@ enum class Screen {
     Home,
     Wiki,
     GardenManagement,
-    PlantDetail
+    PlantDetail,
+    User
 }
 
 @Composable
@@ -51,35 +52,51 @@ fun App(
             onSetupWikiViewModel(wikiViewModel)
         }
 
-        // Accedemos mediante .value
         when (currentScreen.value) {
-            Screen.Login -> LoginScreen(
-                viewModel = viewModel,
-                onGoogleLoginRequest = {
-                    onGoogleLogin { success ->
-                        if (success) currentScreen.value = Screen.Home
+            Screen.Login -> {
+                LoginScreen(
+                    viewModel = viewModel,
+                    onGoogleLoginRequest = {
+                        onGoogleLogin { success ->
+                            if (success) currentScreen.value = Screen.Home
+                        }
                     }
-                }
-            )
-            Screen.Home -> HomeScreen(
-                onLogout = { viewModel.logout() },
-                viewModel = viewModel,
-                navigateToGardenManagement = { currentScreen.value = Screen.GardenManagement },
-                navigateToWiki = { currentScreen.value = Screen.Wiki }
-            )
-            Screen.Wiki -> WikiScreen(
-                onBack = { currentScreen.value = Screen.Home },
-                wikiViewModel = wikiViewModel,
-                onPlantClick = { plant ->
-                    selectedPlant.value = plant
-                    currentScreen.value = Screen.PlantDetail
-                }
-            )
-            Screen.GardenManagement -> GardenScreen(
-                onLogout = { viewModel.logout() },
-                onBack = { currentScreen.value = Screen.Home },
-                viewModel = viewModel
-            )
+                )
+            }
+            Screen.Home -> {
+                HomeScreen(
+                    onLogout = { viewModel.logout() },
+                    viewModel = viewModel,
+                    navigateToGardenManagement = { currentScreen.value = Screen.GardenManagement },
+                    navigateToWiki = { currentScreen.value = Screen.Wiki },
+                    navigateToProfile = { currentScreen.value = Screen.User}
+                )
+            }
+            Screen.Wiki -> {
+                WikiScreen(
+                    onBack = { currentScreen.value = Screen.Home },
+                    wikiViewModel = wikiViewModel,
+                    onPlantClick = { plant ->
+                        selectedPlant.value = plant
+                        currentScreen.value = Screen.PlantDetail
+                    }
+
+                )
+            }
+            Screen.GardenManagement -> {
+                GardenScreen(
+                    onLogout = { viewModel.logout() },
+                    onBack = { currentScreen.value = Screen.Home },
+                    viewModel = viewModel
+                )
+            }
+            Screen.User -> {
+                UserScreen(
+                    onLogout = { viewModel.logout() },
+                    onBack = { currentScreen.value = Screen.Home },
+                    viewModel = viewModel
+                )
+            }
             Screen.PlantDetail -> {
                 selectedPlant.value?.let { plant ->
                     PlantDetailScreen(
