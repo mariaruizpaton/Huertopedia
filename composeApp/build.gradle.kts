@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.invoke
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -6,14 +7,11 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    //alias(libs.plugins.googleGmsGoogleServices)
     id("com.google.gms.google-services")
     alias(libs.plugins.kotlinx.serialization)
 }
 
 kotlin {
-    // ESTA LÍNEA ES LA SOLUCIÓN AL ERROR DE "iosMain not found"
-    // Crea automáticamente la carpeta iosMain para agrupar tus targets
     applyDefaultHierarchyTemplate()
 
     androidTarget {
@@ -38,16 +36,15 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
 
-            // Firebase nativo para Android (Login con Google requiere esto)
+            // Firebase nativo para Android
             implementation(project.dependencies.platform("com.google.firebase:firebase-bom:33.1.0"))
-
             implementation("com.google.firebase:firebase-auth")
             implementation("com.google.android.gms:play-services-auth:21.2.0")
             implementation("com.google.firebase:firebase-firestore")
+            implementation("com.google.firebase:firebase-storage")
 
-            // Ktor Engine para Android (Java)
+            // Ktor Engine para Android
             implementation("io.ktor:ktor-client-okhttp:2.3.8")
-            implementation("com.google.firebase:firebase-storage") // <-- DEPENDENCIA AÑADIDA
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -59,37 +56,30 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(compose.materialIconsExtended)
-            implementation(compose.material3)
             implementation("media.kamel:kamel-image:0.9.3")
 
-            // --- IMPORTANTE: SOLO GITLIVE ---
-            implementation("dev.gitlive:firebase-auth:1.11.1")
-            implementation("dev.gitlive:firebase-firestore:1.11.1")
-            implementation("dev.gitlive:firebase-storage:1.11.1")
-
-            implementation(libs.kotlinx.serialization.core)
-
-            // Ktor Core (La base para todos)
+            // Ktor Core & plugins
             implementation("io.ktor:ktor-client-core:2.3.8")
-            // Plugins de Ktor necesarios
             implementation("io.ktor:ktor-client-content-negotiation:2.3.8")
             implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.8")
-        }
 
-        // IOS (Específico)
-        // Usamos 'getting' porque iosMain se crea automáticamente al definir los targets arriba
-        val iosMain by getting {
-            dependencies {
-                // Ktor Engine para iOS (Nativo Apple)
-                implementation("io.ktor:ktor-client-darwin:2.3.8")
-            }
-            implementation("io.ktor:ktor-client-okhttp:2.3.8")
+            // kotlinx.serialization
+            implementation(libs.kotlinx.serialization.core)
+
+            // Image loading
             implementation("io.coil-kt:coil-compose:2.6.0")
 
-            // Unify Firebase KMP dependencies to a single version
+            // GitLive Firebase KMP (using version 1.13.0)
             implementation("dev.gitlive:firebase-auth:1.13.0")
             implementation("dev.gitlive:firebase-firestore:1.13.0")
             implementation("dev.gitlive:firebase-storage:1.13.0")
+        }
+
+        val iosMain by getting {
+            dependencies {
+                // Ktor Engine para iOS
+                implementation("io.ktor:ktor-client-darwin:2.3.8")
+            }
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -125,6 +115,5 @@ android {
 }
 
 dependencies {
-    implementation(libs.firebase.storage)
     debugImplementation(compose.uiTooling)
 }
