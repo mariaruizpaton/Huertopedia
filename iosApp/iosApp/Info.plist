@@ -4,5 +4,7 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>NSPhotoLibraryUsageDescription</key>
+    <string>Necesitamos acceso a tu galería para que puedas elegir tu foto de perfil.</string>
 </dict>
 </plist>

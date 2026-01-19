@@ -62,29 +62,39 @@ class MainActivity : ComponentActivity() {
                     auth.addAuthStateListener { firebaseAuth ->
                         val user = firebaseAuth.currentUser
                         viewModel.setLoggedIn(user != null)
+
                         if (user != null) {
+                            // --- CAMBIO CLAVE: Guardar el ID para evitar el error de segmentos ---
+                            viewModel.userId = user.uid
+
                             val userDocRef = db.collection("usuario").document(user.uid)
                             userDocRef.get().addOnSuccessListener { document ->
                                 if (document.exists()) {
                                     viewModel.name = document.getString("nombre")
-                                    Log.d("AuthState", "Usuario encontrado en Firestore. Nombre: ${viewModel.name}")
+                                    // --- NUEVO: Cargar descripción e imagen para que salgan en el perfil ---
+                                    viewModel.descripcion = document.getString("descripcion") ?: ""
+                                    viewModel.imagenUrl = document.getString("imagen_url") ?: ""
+
+                                    Log.d("AuthState", "Datos cargados: ${viewModel.name}, ${viewModel.descripcion}")
                                 } else {
+                                    // Registro de nuevo usuario (Google)
                                     val nameFromAuth = user.displayName
                                     viewModel.name = nameFromAuth
-                                    Log.d("AuthState", "Nuevo usuario de Google. Nombre: $nameFromAuth")
+                                    viewModel.descripcion = ""
+                                    viewModel.imagenUrl = ""
 
-                                    val userData = hashMapOf("nombre" to nameFromAuth, "email" to user.email)
-                                    userDocRef.set(userData).addOnFailureListener { e ->
-                                        Log.e("AuthState", "Error al guardar nuevo usuario en Firestore", e)
-                                    }
+                                    val userData = hashMapOf(
+                                        "nombre" to nameFromAuth,
+                                        "email" to user.email,
+                                        "descripcion" to "",
+                                        "imagen_url" to ""
+                                    )
+                                    userDocRef.set(userData)
                                 }
-                            }.addOnFailureListener { e ->
-                                Log.e("AuthState", "Error al leer Firestore, fallback a displayName", e)
-                                viewModel.name = user.displayName
                             }
                         } else {
+                            viewModel.userId = "" // Limpiar ID al cerrar sesión
                             viewModel.name = null
-                            Log.d("AuthState", "Usuario ha cerrado sesión.")
                         }
                     }
                     setupViewModelLogic(viewModel, auth, db, googleSignInClient)
@@ -98,8 +108,17 @@ class MainActivity : ComponentActivity() {
             auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val uid = auth.currentUser?.uid
-                    val userData = hashMapOf("nombre" to nombre, "email" to email)
-                    if (uid != null) db.collection("usuario").document(uid).set(userData)
+                    if (uid != null) {
+                        // Inicializamos el documento con todos los campos
+                        val userData = hashMapOf(
+                            "nombre" to nombre,
+                            "email" to email,
+                            "descripcion" to "",
+                            "imagen_url" to ""
+                        )
+                        db.collection("usuario").document(uid).set(userData)
+                        viewModel.userId = uid // IMPORTANTE
+                    }
                     onResult(true, null)
                 } else {
                     onResult(false, task.exception?.message)

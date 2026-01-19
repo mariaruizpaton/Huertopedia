@@ -6,7 +6,6 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    //alias(libs.plugins.googleGmsGoogleServices)
     id("com.google.gms.google-services")
     alias(libs.plugins.kotlinx.serialization)
 }
@@ -39,6 +38,7 @@ kotlin {
             implementation("com.google.firebase:firebase-auth")
             implementation("com.google.android.gms:play-services-auth:21.2.0")
             implementation("com.google.firebase:firebase-firestore")
+            implementation("com.google.firebase:firebase-storage") // <-- DEPENDENCIA AÑADIDA
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -51,13 +51,14 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(compose.materialIconsExtended)
             implementation("media.kamel:kamel-image:0.9.3")
-            implementation(libs.firebase.firestore.multiplatform)
-            implementation(libs.firebase.auth.multiplatform)
-            implementation(libs.firebase.storage.multiplatform)
-            implementation("dev.gitlive:firebase-auth:1.8.1")
-            implementation("dev.gitlive:firebase-firestore:1.8.1")
             implementation(libs.kotlinx.serialization.core)
             implementation("io.ktor:ktor-client-okhttp:2.3.8")
+            implementation("io.coil-kt:coil-compose:2.6.0")
+
+            // Unify Firebase KMP dependencies to a single version
+            implementation("dev.gitlive:firebase-auth:1.13.0")
+            implementation("dev.gitlive:firebase-firestore:1.13.0")
+            implementation("dev.gitlive:firebase-storage:1.13.0")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -93,6 +94,5 @@ android {
 }
 
 dependencies {
-    implementation(libs.firebase.storage)
     debugImplementation(compose.uiTooling)
 }
