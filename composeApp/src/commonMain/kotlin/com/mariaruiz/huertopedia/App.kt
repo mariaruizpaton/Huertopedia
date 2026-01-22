@@ -6,7 +6,9 @@ import androidx.compose.ui.graphics.Color
 import com.mariaruiz.huertopedia.screens.*
 import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
 import com.mariaruiz.huertopedia.viewmodel.WikiViewModel
+import com.mariaruiz.huertopedia.viewmodel.GardenViewModel
 import com.mariaruiz.huertopedia.model.Plant
+import com.mariaruiz.huertopedia.model.Planter
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 private val GardenColorScheme = lightColorScheme(
@@ -20,11 +22,13 @@ private val GardenColorScheme = lightColorScheme(
 
 enum class Screen {
     Login,
+    User,
     Home,
     Wiki,
     GardenManagement,
     PlantDetail,
-    User
+    CropLog
+
 }
 
 @Composable
@@ -37,8 +41,10 @@ fun App(
     MaterialTheme(colorScheme = GardenColorScheme) {
         val viewModel = remember { LoginViewModel() }
         val wikiViewModel = remember { WikiViewModel() }
+        val gardenViewModel = remember { GardenViewModel() }
+        val selectedPlanter = remember { mutableStateOf<Planter?>(null) }
 
-        // Cambiamos 'by' por '=' para usar .value y eliminar los warnings del IDE
+        // Usamos '=' para usar .value y eliminar los warnings del IDE
         val selectedPlant = remember { mutableStateOf<Plant?>(null) }
         val isLoggedIn by viewModel.isLoggedIn.collectAsState()
         val currentScreen = remember { mutableStateOf(Screen.Login) }
@@ -63,6 +69,13 @@ fun App(
                     }
                 )
             }
+            Screen.User -> {
+                UserScreen(
+                    onLogout = { viewModel.logout() },
+                    onBack = { currentScreen.value = Screen.Home },
+                    viewModel = viewModel
+                )
+            }
             Screen.Home -> {
                 HomeScreen(
                     onLogout = { viewModel.logout() },
@@ -85,16 +98,13 @@ fun App(
             }
             Screen.GardenManagement -> {
                 GardenScreen(
-                    onLogout = { viewModel.logout() },
                     onBack = { currentScreen.value = Screen.Home },
-                    viewModel = viewModel
-                )
-            }
-            Screen.User -> {
-                UserScreen(
-                    onLogout = { viewModel.logout() },
-                    onBack = { currentScreen.value = Screen.Home },
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    gardenViewModel = gardenViewModel,
+                    onNavigateToLog = { planter ->
+                        selectedPlanter.value = planter
+                        currentScreen.value = Screen.CropLog
+                    }
                 )
             }
             Screen.PlantDetail -> {
@@ -102,6 +112,15 @@ fun App(
                     PlantDetailScreen(
                         plant = plant,
                         onBack = { currentScreen.value = Screen.Wiki }
+                    )
+                }
+            }
+            Screen.CropLog -> {
+                selectedPlanter.value?.let { planter ->
+                    CropLogScreen(
+                        planter = planter,
+                        onBack = { currentScreen.value = Screen.GardenManagement },
+                        gardenViewModel = gardenViewModel
                     )
                 }
             }

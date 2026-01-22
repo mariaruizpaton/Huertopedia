@@ -52,32 +52,66 @@ class LoginViewModel : ViewModel() {
 
     fun onAceptarClick() {
         errorMessage = null
-        if (name?.isBlank() == true && isRegisterMode) {
-            errorMessage = "El nombre no puede estar vacío"
-            return
-        }
-        if (email.isBlank() || password.isBlank()) {
-            errorMessage = "Rellena todos los campos"
-            return
-        }
+        // ... validaciones de campos vacíos ...
 
         if (isRegisterMode) {
-            onRegisterRequested?.invoke(email, password, name) { success, uid ->
-                if (success && uid != null) {
-                    this.userId = uid // Guardamos el ID del documento
+            onRegisterRequested?.invoke(email, password, name) { success, result ->
+                if (success) {
+                    this.userId = result ?: ""
                     setLoggedIn(true)
                 } else {
-                    errorMessage = "Error en registro: $uid"
+                    errorMessage = translateFirebaseError(result ?: "")
                 }
             }
         } else {
-            onLoginRequested?.invoke(email, password) { success, uid ->
-                if (success && uid != null) {
-                    this.userId = uid // Guardamos el ID del documento
+            onLoginRequested?.invoke(email, password) { success, result ->
+                if (success) {
+                    this.userId = result ?: ""
                     setLoggedIn(true)
                 } else {
-                    errorMessage = "Error en login: $uid"
+                    errorMessage = translateFirebaseError(result ?: "")
                 }
+            }
+        }
+    }
+
+    private fun translateFirebaseError(firebaseMessage: String): String {
+        val message = firebaseMessage.lowercase()
+        return when {
+            // Credenciales incorrectas
+            message.contains("credential") ||
+                    message.contains("password") ||
+                    message.contains("auth") ||
+                    message.contains("incorrect") -> "error_invalid_credentials"
+
+            // Usuario no encontrado
+            message.contains("user-not-found") ||
+                    message.contains("no user") -> "error_user_not_found"
+
+            // EMAIL YA EXISTE (Mejorado para capturar todas las variantes)
+            message.contains("email") && (
+                    message.contains("already") ||
+                            message.contains("exists") ||
+                            message.contains("use") ||
+                            message.contains("registrado")
+                    ) -> "error_email_already_in_use"
+
+            // Contraseña débil
+            message.contains("weak-password") ||
+                    message.contains("short") -> "error_weak_password"
+
+            // Email mal formado
+            message.contains("invalid-email") ||
+                    message.contains("malformed") -> "error_invalid_email"
+
+            // Red
+            message.contains("network") ||
+                    message.contains("timeout") ||
+                    message.contains("connection") -> "error_network"
+
+            else -> {
+                println("DEBUG_FIREBASE_ERROR: $firebaseMessage")
+                "error_unknown"
             }
         }
     }

@@ -73,6 +73,9 @@ kotlin {
             implementation("dev.gitlive:firebase-auth:1.13.0")
             implementation("dev.gitlive:firebase-firestore:1.13.0")
             implementation("dev.gitlive:firebase-storage:1.13.0")
+
+            // Pruebas para la fecha y hora actual
+            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
         }
 
         val iosMain by getting {
