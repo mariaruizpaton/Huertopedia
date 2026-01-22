@@ -155,7 +155,6 @@ class GardenViewModel : ViewModel() {
     fun deletePlanter(planterId: String) {
         val uid = auth.currentUser?.uid ?: return
         if (planterId.isBlank()) return
-
         viewModelScope.launch {
             try {
                 // Borramos el documento de la jardinera

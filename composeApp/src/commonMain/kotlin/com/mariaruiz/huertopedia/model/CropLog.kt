@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 // Diario de Cultivo
 @Serializable
 data class CropLog(
-    val id: String = "",
+    val id: String = "", // CropLog-NombreJardinera
     val fecha: Long = 0L,
     val nota: String = "",
     val urlFoto: String? = null,
