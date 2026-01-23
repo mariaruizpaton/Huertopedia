@@ -30,14 +30,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mariaruiz.huertopedia.theme.GardenGreen
 import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
-import huertopedia.composeapp.generated.resources.Res
-import huertopedia.composeapp.generated.resources.*
-import org.jetbrains.compose.resources.stringResource
+import com.mariaruiz.huertopedia.i18n.LocalStrings
 
 @Composable
 fun HomeScreen(
@@ -48,6 +45,7 @@ fun HomeScreen(
     navigateToProfile : () -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
+    val strings = LocalStrings.current
 
     Scaffold(
         topBar = {
@@ -74,7 +72,7 @@ fun HomeScreen(
                         onDismissRequest = { showMenu = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Ver peril") },
+                            text = { Text(strings.viewProfile) },
                             onClick = navigateToProfile
                         )
                     }
@@ -90,44 +88,41 @@ fun HomeScreen(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Cabecera
+            // Cabecera traducida correctamente con {0}
             Text(
-                text = stringResource(Res.string.home_welcome, viewModel.name ?: "Usuario"),
+                text = strings.homeWelcome.replace("{0}", viewModel.name ?: "Usuario"),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
             )
             Text(
-                text = stringResource(Res.string.home_subtitle),
+                text = strings.welcomeSubtitle,
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color.Gray
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Tarjeta 1: Gestión del Huerto
             HomeCard(
-                title = stringResource(Res.string.home_card_garden_title),
-                description = stringResource(Res.string.home_card_garden_desc),
+                title = strings.homeGardenCard,
+                description = strings.homeGardenDesc,
                 iconEmoji = "🪴",
                 onClick = navigateToGardenManagement
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Tarjeta 2: Enciclopedia de Cultivos
             HomeCard(
-                title = stringResource(Res.string.home_card_wiki_title),
-                description = stringResource(Res.string.home_card_wiki_desc),
+                title = strings.homeWikiCard,
+                description = strings.homeWikiDesc,
                 iconEmoji = "📖",
                 onClick = navigateToWiki
             )
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Pie de página: Última actividad
             Text(
-                text = stringResource(Res.string.home_last_activity),
+                text = strings.homeLastActivity,
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )
@@ -142,7 +137,7 @@ fun HomeScreen(
                 color = Color.White
             ) {
                 Text(
-                    text = stringResource(Res.string.home_activity_sample),
+                    text = strings.homeActivitySample,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     color = GardenGreen,
                     style = MaterialTheme.typography.bodyMedium
@@ -188,7 +183,7 @@ fun HomeCard(
                 text = title,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -197,7 +192,7 @@ fun HomeCard(
                 text = description,
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.Gray,
-                textAlign = TextAlign.Center
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
         }
     }

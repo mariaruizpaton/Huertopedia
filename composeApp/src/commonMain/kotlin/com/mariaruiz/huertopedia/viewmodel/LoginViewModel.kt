@@ -39,7 +39,7 @@ class LoginViewModel : ViewModel() {
                     imagenUrl = document.get<String>("imagen_url") ?: ""
                 }
             } catch (e: Exception) {
-                errorMessage = "Error al cargar datos: ${e.message}"
+                errorMessage = "error_unknown"
             }
         }
     }
@@ -52,7 +52,18 @@ class LoginViewModel : ViewModel() {
 
     fun onAceptarClick() {
         errorMessage = null
-        // ... validaciones de campos vacíos ...
+        
+        // Validación de Nombre (solo en registro)
+        if (isRegisterMode && (name == null || name?.isBlank() == true)) {
+            errorMessage = "error_name_empty"
+            return
+        }
+        
+        // Validación de Email y Contraseña
+        if (email.isBlank() || password.isBlank()) {
+            errorMessage = "error_fields_empty"
+            return
+        }
 
         if (isRegisterMode) {
             onRegisterRequested?.invoke(email, password, name) { success, result ->
@@ -88,7 +99,7 @@ class LoginViewModel : ViewModel() {
             message.contains("user-not-found") ||
                     message.contains("no user") -> "error_user_not_found"
 
-            // EMAIL YA EXISTE (Mejorado para capturar todas las variantes)
+            // EMAIL YA EXISTE
             message.contains("email") && (
                     message.contains("already") ||
                             message.contains("exists") ||
@@ -118,38 +129,19 @@ class LoginViewModel : ViewModel() {
 
     fun logout() {
         onLogoutRequested?.invoke()
-
-        // 1. Limpiamos credenciales
         email = ""
         password = ""
         userId = ""
-
-        // 2. Limpiamos datos de perfil
         name = null
         descripcion = ""
-
-        // 3. ¡ESTO ES LO MÁS IMPORTANTE!
-        // Limpiamos las URLs para que no se vea la foto anterior
         imagenUrl = ""
         imagenUrlRenderizable = null
-
-        // 4. Limpiamos listas si las añadiste
-        // favoritasIds = emptyList()
-        // wishlistIds = emptyList()
-
         errorMessage = null
-        println("Sesión cerrada y datos limpiados por completo")
-    }
-
-    fun onGoogleLogin() {
-        // La lógica de login está en MainActivity y el estado se actualiza con el AuthStateListener.
     }
 
     var descripcion by mutableStateOf("")
     var imagenUrl by mutableStateOf("")
-    var userId by mutableStateOf("") // Necesitas el ID del documento para actualizar
-
-// ... dentro del ViewModel ...
+    var userId by mutableStateOf("")
 
     fun uploadImageBytes(bytes: ByteArray) {
         if (userId.isBlank()) return
@@ -163,16 +155,13 @@ class LoginViewModel : ViewModel() {
                 updateUserData(name ?: "", descripcion, pathRelativa)
 
             } catch (e: Exception) {
-                errorMessage = "Error en Storage: ${e.message}"
+                errorMessage = "error_unknown"
             }
         }
     }
 
     fun updateUserData(newName: String, newDesc: String, newImageUrl: String) {
-        if (userId.isBlank()) {
-            errorMessage = "ID de usuario no encontrado"
-            return
-        }
+        if (userId.isBlank()) return
 
         viewModelScope.launch {
             try {
@@ -185,12 +174,11 @@ class LoginViewModel : ViewModel() {
                     "imagen_url" to newImageUrl
                 )
 
-                // Actualizar estado local para que la UI se refresque
                 name = newName
                 descripcion = newDesc
                 imagenUrl = newImageUrl
             } catch (e: Exception) {
-                errorMessage = "Error en Firestore: ${e.message}"
+                errorMessage = "error_unknown"
             }
         }
     }
@@ -198,7 +186,7 @@ class LoginViewModel : ViewModel() {
     var imagenUrlRenderizable by mutableStateOf<String?>(null)
 
     fun obtenerUrlDescarga() {
-        val path = imagenUrl // Aquí está el "icons/nombre.jpg"
+        val path = imagenUrl
         if (path.isBlank()) {
             imagenUrlRenderizable = null
             return
@@ -206,11 +194,9 @@ class LoginViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                // Hacemos lo mismo que en WikiViewModel: convertir ruta corta a URL larga
                 val downloadUrl = Firebase.storage.reference.child(path).getDownloadUrl()
                 imagenUrlRenderizable = downloadUrl
             } catch (e: Exception) {
-                println("Error al obtener URL del perfil: ${e.message}")
                 imagenUrlRenderizable = null
             }
         }

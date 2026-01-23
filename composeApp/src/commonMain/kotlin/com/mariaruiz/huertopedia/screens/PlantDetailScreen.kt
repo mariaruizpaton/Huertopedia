@@ -1,11 +1,13 @@
 package com.mariaruiz.huertopedia.screens
 
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -18,17 +20,16 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mariaruiz.huertopedia.model.Plant
+import com.mariaruiz.huertopedia.utils.BackHandler
+import com.mariaruiz.huertopedia.i18n.LocalStrings
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
-import com.mariaruiz.huertopedia.utils.BackHandler
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import huertopedia.composeapp.generated.resources.*
-import org.jetbrains.compose.resources.stringResource
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlantDetailScreen(plant: Plant, onBack: () -> Unit) {
+    val strings = LocalStrings.current
+    
     BackHandler {
         onBack()
     }
@@ -36,12 +37,12 @@ fun PlantDetailScreen(plant: Plant, onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(Res.string.detail_title_page)) },
+                title = { Text(strings.detailTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(Res.string.detail_back)
+                            contentDescription = strings.detailBack
                         )
                     }
                 }
@@ -63,7 +64,7 @@ fun PlantDetailScreen(plant: Plant, onBack: () -> Unit) {
             ) {
                 if (!plant.imagenUrl.isNullOrBlank()) {
                     KamelImage(
-                        resource = asyncPainterResource(data = plant.imagenUrl),
+                        resource = asyncPainterResource(data = plant.imagenUrl!!),
                         contentDescription = plant.nombreComun,
                         modifier = Modifier
                             .fillMaxSize()
@@ -93,19 +94,20 @@ fun PlantDetailScreen(plant: Plant, onBack: () -> Unit) {
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF2E7D32)
                 )
+                
                 Surface(
                     color = Color(0xFFC8E6C9),
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.padding(vertical = 4.dp)
                 ) {
-                    val categoryResource = when(plant.categoria) {
-                        "Hortalizas" -> stringResource(Res.string.wiki_cat_veg)
-                        "Frutas" -> stringResource(Res.string.wiki_cat_fruit)
-                        "Hierbas" -> stringResource(Res.string.wiki_cat_herbs)
+                    val categoryName = when(plant.categoria) {
+                        "Hortalizas" -> strings.wikiCategoryVegetables
+                        "Frutas" -> strings.wikiCategoryFruits
+                        "Hierbas" -> strings.wikiCategoryHerbs
                         else -> plant.categoria
                     }
                     Text(
-                        text = categoryResource,
+                        text = categoryName,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelLarge,
                         color = Color(0xFF1B5E20)
@@ -121,13 +123,13 @@ fun PlantDetailScreen(plant: Plant, onBack: () -> Unit) {
                     InfoCard(
                         modifier = Modifier.weight(1f),
                         icon = Icons.Default.Timer,
-                        label = stringResource(Res.string.detail_harvest),
-                        value = stringResource(Res.string.detail_harvest_days, plant.diasCosecha.toString())
+                        label = strings.detailHarvest,
+                        value = strings.detailHarvestDays.replace("{0}", plant.diasCosecha.toString())
                     )
                     InfoCard(
                         modifier = Modifier.weight(1f),
                         icon = Icons.Default.WaterDrop,
-                        label = stringResource(Res.string.detail_watering),
+                        label = strings.detailWatering,
                         value = plant.frecuenciaRiego,
                         iconColor = Color(0xFF2196F3)
                     )
@@ -136,37 +138,37 @@ fun PlantDetailScreen(plant: Plant, onBack: () -> Unit) {
                 Spacer(modifier = Modifier.height(24.dp))
 
                 DetailSection(
-                    title = stringResource(Res.string.detail_soil), icon = Icons.Default.Landscape, color = Color(
-                        0xFFA34400
-                    )
+                    title = strings.detailSoil, 
+                    icon = Icons.Default.Landscape, 
+                    color = Color(0xFFA34400)
                 ) {
-                    Text(text = plant.tipoSustrato.ifEmpty { stringResource(Res.string.detail_not_specified) })
+                    Text(text = plant.tipoSustrato.ifEmpty { strings.detailNotSpecified })
                 }
 
-                DetailSection(title = stringResource(Res.string.detail_season), icon = Icons.Default.CalendarMonth) {
+                DetailSection(title = strings.detailSeason, icon = Icons.Default.CalendarMonth) {
                     Text(
                         text = plant.temporadaSiembra.joinToString(", ")
-                            .ifEmpty { stringResource(Res.string.detail_not_specified) })
+                            .ifEmpty { strings.detailNotSpecified })
                 }
 
                 DetailSection(
-                    title = stringResource(Res.string.detail_friends),
+                    title = strings.detailFriends,
                     icon = Icons.Default.ThumbUp,
                     color = Color(0xFF4CAF50)
                 ) {
                     Text(
                         text = plant.plantasAmigables.joinToString(", ")
-                            .ifEmpty { stringResource(Res.string.detail_none_known) })
+                            .ifEmpty { strings.detailNoneKnown })
                 }
 
                 DetailSection(
-                    title = stringResource(Res.string.detail_enemies),
+                    title = strings.detailEnemies,
                     icon = Icons.Default.ThumbDown,
                     color = Color(0xFFE53935)
                 ) {
                     Text(
                         text = plant.plantasEnemigas.joinToString(", ")
-                            .ifEmpty { stringResource(Res.string.detail_none_known) })
+                            .ifEmpty { strings.detailNoneKnown })
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))

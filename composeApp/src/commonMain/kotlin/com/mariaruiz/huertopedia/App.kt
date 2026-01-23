@@ -1,14 +1,21 @@
 package com.mariaruiz.huertopedia
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.mariaruiz.huertopedia.i18n.EnStrings
+import com.mariaruiz.huertopedia.i18n.EsStrings
+import com.mariaruiz.huertopedia.i18n.LocalStrings
 import com.mariaruiz.huertopedia.screens.*
 import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
 import com.mariaruiz.huertopedia.viewmodel.WikiViewModel
 import com.mariaruiz.huertopedia.viewmodel.GardenViewModel
 import com.mariaruiz.huertopedia.model.Plant
 import com.mariaruiz.huertopedia.model.Planter
+import com.mariaruiz.huertopedia.repositories.LanguageRepository
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 private val GardenColorScheme = lightColorScheme(
@@ -28,7 +35,6 @@ enum class Screen {
     GardenManagement,
     PlantDetail,
     CropLog
-
 }
 
 @Composable
@@ -38,90 +44,103 @@ fun App(
     onSetupViewModel: (LoginViewModel) -> Unit = {},
     onSetupWikiViewModel: (WikiViewModel) -> Unit = {}
 ) {
-    MaterialTheme(colorScheme = GardenColorScheme) {
-        val viewModel = remember { LoginViewModel() }
-        val wikiViewModel = remember { WikiViewModel() }
-        val gardenViewModel = remember { GardenViewModel() }
-        val selectedPlanter = remember { mutableStateOf<Planter?>(null) }
+    val languageRepository = remember { LanguageRepository() }
+    val currentLangCode by languageRepository.currentLanguage.collectAsState()
 
-        // Usamos '=' para usar .value y eliminar los warnings del IDE
-        val selectedPlant = remember { mutableStateOf<Plant?>(null) }
-        val isLoggedIn by viewModel.isLoggedIn.collectAsState()
-        val currentScreen = remember { mutableStateOf(Screen.Login) }
+    // Determinamos el objeto de strings según el código guardado
+    val strings = when (currentLangCode) {
+        "en" -> EnStrings
+        else -> EsStrings
+    }
 
-        LaunchedEffect(isLoggedIn) {
-            currentScreen.value = if (isLoggedIn) Screen.Home else Screen.Login
-        }
+    // Proveemos el idioma a toda la App
+    CompositionLocalProvider(LocalStrings provides strings) {
+        MaterialTheme(colorScheme = GardenColorScheme) {
+            val viewModel = remember { LoginViewModel() }
+            val wikiViewModel = remember { WikiViewModel() }
+            val gardenViewModel = remember { GardenViewModel() }
+            val selectedPlanter = remember { mutableStateOf<Planter?>(null) }
+            val selectedPlant = remember { mutableStateOf<Plant?>(null) }
+            val isLoggedIn by viewModel.isLoggedIn.collectAsState()
+            val currentScreen = remember { mutableStateOf(Screen.Login) }
 
-        LaunchedEffect(Unit) {
-            onSetupViewModel(viewModel)
-            onSetupWikiViewModel(wikiViewModel)
-        }
+            LaunchedEffect(isLoggedIn) {
+                currentScreen.value = if (isLoggedIn) Screen.Home else Screen.Login
+            }
 
-        when (currentScreen.value) {
-            Screen.Login -> {
-                LoginScreen(
-                    viewModel = viewModel,
-                    onGoogleLoginRequest = {
-                        onGoogleLogin { success ->
-                            if (success) currentScreen.value = Screen.Home
+            LaunchedEffect(Unit) {
+                onSetupViewModel(viewModel)
+                onSetupWikiViewModel(wikiViewModel)
+            }
+
+            Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                when (currentScreen.value) {
+                    Screen.Login -> {
+                        LoginScreen(
+                            viewModel = viewModel,
+                            languageRepository = languageRepository, // Pasamos el repo para el botón
+                            onGoogleLoginRequest = {
+                                onGoogleLogin { success ->
+                                    if (success) currentScreen.value = Screen.Home
+                                }
+                            }
+                        )
+                    }
+                    Screen.User -> {
+                        UserScreen(
+                            onLogout = { viewModel.logout() },
+                            onBack = { currentScreen.value = Screen.Home },
+                            viewModel = viewModel,
+                            languageRepository = languageRepository
+                        )
+                    }
+                    Screen.Home -> {
+                        HomeScreen(
+                            onLogout = { viewModel.logout() },
+                            viewModel = viewModel,
+                            navigateToGardenManagement = { currentScreen.value = Screen.GardenManagement },
+                            navigateToWiki = { currentScreen.value = Screen.Wiki },
+                            navigateToProfile = { currentScreen.value = Screen.User }
+                        )
+                    }
+                    Screen.Wiki -> {
+                        WikiScreen(
+                            onBack = { currentScreen.value = Screen.Home },
+                            wikiViewModel = wikiViewModel,
+                            onPlantClick = { plant ->
+                                selectedPlant.value = plant
+                                currentScreen.value = Screen.PlantDetail
+                            }
+                        )
+                    }
+                    Screen.GardenManagement -> {
+                        GardenScreen(
+                            onBack = { currentScreen.value = Screen.Home },
+                            viewModel = viewModel,
+                            gardenViewModel = gardenViewModel,
+                            onNavigateToLog = { planter ->
+                                selectedPlanter.value = planter
+                                currentScreen.value = Screen.CropLog
+                            }
+                        )
+                    }
+                    Screen.PlantDetail -> {
+                        selectedPlant.value?.let { plant ->
+                            PlantDetailScreen(
+                                plant = plant,
+                                onBack = { currentScreen.value = Screen.Wiki }
+                            )
                         }
                     }
-                )
-            }
-            Screen.User -> {
-                UserScreen(
-                    onLogout = { viewModel.logout() },
-                    onBack = { currentScreen.value = Screen.Home },
-                    viewModel = viewModel
-                )
-            }
-            Screen.Home -> {
-                HomeScreen(
-                    onLogout = { viewModel.logout() },
-                    viewModel = viewModel,
-                    navigateToGardenManagement = { currentScreen.value = Screen.GardenManagement },
-                    navigateToWiki = { currentScreen.value = Screen.Wiki },
-                    navigateToProfile = { currentScreen.value = Screen.User}
-                )
-            }
-            Screen.Wiki -> {
-                WikiScreen(
-                    onBack = { currentScreen.value = Screen.Home },
-                    wikiViewModel = wikiViewModel,
-                    onPlantClick = { plant ->
-                        selectedPlant.value = plant
-                        currentScreen.value = Screen.PlantDetail
+                    Screen.CropLog -> {
+                        selectedPlanter.value?.let { planter ->
+                            CropLogScreen(
+                                planter = planter,
+                                onBack = { currentScreen.value = Screen.GardenManagement },
+                                gardenViewModel = gardenViewModel
+                            )
+                        }
                     }
-
-                )
-            }
-            Screen.GardenManagement -> {
-                GardenScreen(
-                    onBack = { currentScreen.value = Screen.Home },
-                    viewModel = viewModel,
-                    gardenViewModel = gardenViewModel,
-                    onNavigateToLog = { planter ->
-                        selectedPlanter.value = planter
-                        currentScreen.value = Screen.CropLog
-                    }
-                )
-            }
-            Screen.PlantDetail -> {
-                selectedPlant.value?.let { plant ->
-                    PlantDetailScreen(
-                        plant = plant,
-                        onBack = { currentScreen.value = Screen.Wiki }
-                    )
-                }
-            }
-            Screen.CropLog -> {
-                selectedPlanter.value?.let { planter ->
-                    CropLogScreen(
-                        planter = planter,
-                        onBack = { currentScreen.value = Screen.GardenManagement },
-                        gardenViewModel = gardenViewModel
-                    )
                 }
             }
         }

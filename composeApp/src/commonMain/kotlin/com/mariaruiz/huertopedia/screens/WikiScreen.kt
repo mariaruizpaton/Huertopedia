@@ -20,10 +20,9 @@ import androidx.compose.ui.unit.dp
 import com.mariaruiz.huertopedia.model.Plant
 import com.mariaruiz.huertopedia.utils.BackHandler
 import com.mariaruiz.huertopedia.viewmodel.WikiViewModel
-import huertopedia.composeapp.generated.resources.*
+import com.mariaruiz.huertopedia.i18n.LocalStrings
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
-import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -32,6 +31,7 @@ fun WikiScreen(
     wikiViewModel: WikiViewModel = remember { WikiViewModel() },
     onPlantClick: (Plant) -> Unit
 ) {
+    val strings = LocalStrings.current
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("Todo") }
     val plants by wikiViewModel.plants.collectAsState()
@@ -47,12 +47,12 @@ fun WikiScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(Res.string.wiki_title)) },
+                title = { Text(strings.wikiTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(Res.string.detail_back)
+                            contentDescription = strings.detailBack
                         )
                     }
                 }
@@ -64,7 +64,7 @@ fun WikiScreen(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    label = { Text(stringResource(Res.string.wiki_search_placeholder)) },
+                    label = { Text(strings.searchPlaceholder) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -75,10 +75,10 @@ fun WikiScreen(
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     val categories = listOf(
-                        stringResource(Res.string.wiki_cat_all) to "Todo",
-                        stringResource(Res.string.wiki_cat_veg) to "Hortalizas",
-                        stringResource(Res.string.wiki_cat_fruit) to "Frutas",
-                        stringResource(Res.string.wiki_cat_herbs) to "Hierbas"
+                        strings.wikiCategoryAll to "Todo",
+                        strings.wikiCategoryVegetables to "Hortalizas",
+                        strings.wikiCategoryFruits to "Frutas",
+                        strings.wikiCategoryHerbs to "Hierbas"
                     )
                     categories.forEach { (label, value) ->
                         FilterChip(
@@ -107,6 +107,7 @@ fun WikiScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlantCard(plant: Plant, onClick: () -> Unit) {
+    val strings = LocalStrings.current
     Card(
         modifier = Modifier
             .padding(8.dp)
@@ -142,7 +143,7 @@ fun PlantCard(plant: Plant, onClick: () -> Unit) {
                         .background(Color.LightGray),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(stringResource(Res.string.wiki_no_photo), style = MaterialTheme.typography.labelSmall)
+                    Text(strings.wikiNoPhoto, style = MaterialTheme.typography.labelSmall)
                 }
             }
 

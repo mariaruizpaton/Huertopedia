@@ -26,6 +26,9 @@ import com.mariaruiz.huertopedia.utils.rememberImagePicker
 import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
+import com.mariaruiz.huertopedia.repositories.LanguageRepository
+import com.mariaruiz.huertopedia.components.LanguageButton
+import com.mariaruiz.huertopedia.i18n.LocalStrings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,7 +36,9 @@ fun UserScreen(
     onLogout: () -> Unit,
     onBack: () -> Unit,
     viewModel: LoginViewModel,
+    languageRepository: LanguageRepository
 ) {
+    val strings = LocalStrings.current
     var isEditing by remember { mutableStateOf(false) }
     var tempNombre by remember { mutableStateOf(viewModel.name ?: "") }
     var tempDesc by remember { mutableStateOf(viewModel.descripcion) }
@@ -60,22 +65,19 @@ fun UserScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mi Perfil", fontWeight = FontWeight.Bold) },
+                title = { Text(strings.profileTitle, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Atrás")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = strings.detailBack)
                     }
                 },
                 actions = {
                     if (!isEditing) {
                         IconButton(onClick = { isEditing = true }) {
-                            Icon(Icons.Filled.Edit, contentDescription = "Editar")
+                            Icon(Icons.Filled.Edit, contentDescription = null)
                         }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                }
             )
         }
     ) { paddingValues ->
@@ -107,18 +109,16 @@ fun UserScreen(
                             contentDescription = "Foto de perfil",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize(),
-                            // Usar un crossfade hace que el cambio no sea brusco
                             animationSpec = tween(500)
                         )
                     } else {
-                        // ESTO SE MOSTRARÁ POR DEFECTO
                         Surface(
                             modifier = Modifier.fillMaxSize(),
                             color = MaterialTheme.colorScheme.surfaceVariant
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Person,
-                                contentDescription = "Imagen predeterminada",
+                                contentDescription = null,
                                 modifier = Modifier.padding(30.dp),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -126,7 +126,6 @@ fun UserScreen(
                     }
                 }
 
-                // Indicador visual de "Cámara" solo cuando se edita
                 if (isEditing) {
                     Surface(
                         modifier = Modifier
@@ -146,50 +145,41 @@ fun UserScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // FORMULARIO O INFORMACIÓN
             if (isEditing) {
                 OutlinedTextField(
                     value = tempNombre,
                     onValueChange = { tempNombre = it },
-                    label = { Text("Nombre") },
+                    label = { Text(strings.loginName) },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.medium
+                    modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = tempDesc,
                     onValueChange = { tempDesc = it },
-                    label = { Text("Acerca de mí") },
+                    label = { Text(strings.cropLogObservations) },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.medium,
                     minLines = 3
                 )
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    OutlinedButton(
-                        onClick = { isEditing = false },
-                        modifier = Modifier.weight(1f),
-                        shape = MaterialTheme.shapes.medium
-                    ) {
-                        Text("Cancelar")
+                    OutlinedButton(onClick = { isEditing = false }, modifier = Modifier.weight(1f)) {
+                        Text(strings.gardenCancel)
                     }
                     Button(
                         onClick = {
                             viewModel.updateUserData(tempNombre, tempDesc, viewModel.imagenUrl)
                             isEditing = false
                         },
-                        modifier = Modifier.weight(1f),
-                        shape = MaterialTheme.shapes.medium
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Text("Guardar")
+                        Text(strings.gardenSave)
                     }
                 }
             } else {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.extraLarge,
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                 ) {
                     Column(
@@ -199,19 +189,19 @@ fun UserScreen(
                         Text(
                             text = viewModel.name ?: "Usuario",
                             style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = viewModel.descripcion.ifEmpty { "Añade una descripción sobre tu huerto..." },
+                            text = viewModel.descripcion.ifEmpty { strings.welcomeSubtitle },
                             textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            lineHeight = 22.sp
+                            style = MaterialTheme.typography.bodyLarge
                         )
                     }
                 }
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                LanguageButton(languageRepository)
             }
 
             Spacer(modifier = Modifier.weight(1f))
@@ -221,7 +211,7 @@ fun UserScreen(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                 colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
             ) {
-                Text("Cerrar sesión", fontWeight = FontWeight.SemiBold)
+                Text(strings.logoutButton, fontWeight = FontWeight.SemiBold)
             }
         }
     }

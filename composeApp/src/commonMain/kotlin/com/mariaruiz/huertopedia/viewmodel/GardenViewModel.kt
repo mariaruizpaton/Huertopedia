@@ -152,6 +152,19 @@ class GardenViewModel : ViewModel() {
         }
     }
 
+    fun updatePlanterName(planterId: String, newName: String) {
+        val uid = auth.currentUser?.uid ?: return
+        viewModelScope.launch {
+            try {
+                db.collection("usuario").document(uid)
+                    .collection("planters").document(planterId)
+                    .update("nombre" to newName)
+            } catch (e: Exception) {
+                println("Error al actualizar nombre: ${e.message}")
+            }
+        }
+    }
+
     fun deletePlanter(planterId: String) {
         val uid = auth.currentUser?.uid ?: return
         if (planterId.isBlank()) return

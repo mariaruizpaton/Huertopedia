@@ -76,6 +76,9 @@ kotlin {
 
             // Pruebas para la fecha y hora actual
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+
+            // Para el cambio de idioma
+            implementation("com.russhwolf:multiplatform-settings-no-arg:1.2.0")
         }
 
         val iosMain by getting {

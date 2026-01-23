@@ -19,6 +19,7 @@ import com.mariaruiz.huertopedia.model.Planter
 import com.mariaruiz.huertopedia.utils.BackHandler
 import com.mariaruiz.huertopedia.utils.toHumanDateString
 import com.mariaruiz.huertopedia.viewmodel.GardenViewModel
+import com.mariaruiz.huertopedia.i18n.LocalStrings
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,20 +29,21 @@ fun CropLogScreen(
     onBack: () -> Unit,
     gardenViewModel: GardenViewModel
 ) {
+    val strings = LocalStrings.current
     val flowerpots by gardenViewModel.getFlowerpots(planter.id).collectAsState(initial = emptyList())
 
     // Estados para el Diálogo
     var showAddDialog by remember { mutableStateOf(false) }
 
-    // Lista de tipos de evento
+    // Lista de tipos de evento traducida
     val eventTypes = listOf(
-        "Notas",
-        "Riego",
-        "Germinación",
-        "Enfermedad",
-        "Fertilización",
-        "Entutorado",
-        "Eliminación adventicias"
+        strings.eventNotes,
+        strings.eventIrrigation,
+        strings.eventGermination,
+        strings.eventDisease,
+        strings.eventFertilization,
+        strings.eventTrellising,
+        strings.eventWeeding
     )
 
     // Variables del formulario
@@ -50,7 +52,7 @@ fun CropLogScreen(
     var notesContent by remember { mutableStateOf("") }
 
     // Variables específicas para Riego
-    var irrigationType by remember { mutableStateOf("Manual") }
+    var irrigationType by remember { mutableStateOf(strings.irrigationManual) }
     var irrigationMinutes by remember { mutableFloatStateOf(10f) }
 
     BackHandler { onBack() }
@@ -58,10 +60,10 @@ fun CropLogScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Diario: ${planter.nombre}") },
+                title = { Text(strings.cropLogTitle.replace("{0}", planter.nombre)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings.detailBack)
                     }
                 }
             )
@@ -69,14 +71,13 @@ fun CropLogScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    // Resetear formulario
-                    selectedEventType = "Notas"
+                    selectedEventType = eventTypes[0]
                     notesContent = ""
                     irrigationMinutes = 10f
                     showAddDialog = true
                 }
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Añadir entrada")
+                Icon(Icons.Default.Add, contentDescription = strings.cropLogAddEntry)
             }
         }
     ) { padding ->
@@ -85,7 +86,7 @@ fun CropLogScreen(
         if (showAddDialog) {
             AlertDialog(
                 onDismissRequest = { showAddDialog = false },
-                title = { Text("Nueva Entrada") },
+                title = { Text(strings.cropLogNewEntry) },
                 text = {
                     Column(
                         modifier = Modifier
@@ -102,7 +103,7 @@ fun CropLogScreen(
                                 value = selectedEventType,
                                 onValueChange = {},
                                 readOnly = true,
-                                label = { Text("Tipo de Evento") },
+                                label = { Text(strings.cropLogEventType) },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedEventType) },
                                 modifier = Modifier.menuAnchor().fillMaxWidth()
                             )
@@ -126,10 +127,10 @@ fun CropLogScreen(
 
                         // 2. CONTROLES DINÁMICOS
                         when (selectedEventType) {
-                            "Riego" -> {
-                                Text("Método de Riego", style = MaterialTheme.typography.bodyMedium)
+                            strings.eventIrrigation -> {
+                                Text(strings.cropLogIrrigationMethod, style = MaterialTheme.typography.bodyMedium)
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    listOf("Manual", "Goteo", "Lluvia").forEach { type ->
+                                    listOf(strings.irrigationManual, strings.irrigationDrip, strings.irrigationRain).forEach { type ->
                                         FilterChip(
                                             selected = irrigationType == type,
                                             onClick = { irrigationType = type },
@@ -141,7 +142,7 @@ fun CropLogScreen(
                                     }
                                 }
 
-                                Text("Duración: ${irrigationMinutes.roundToInt()} min", style = MaterialTheme.typography.bodyMedium)
+                                Text(strings.cropLogIrrigationDuration.replace("{0}", irrigationMinutes.roundToInt().toString()), style = MaterialTheme.typography.bodyMedium)
                                 Slider(
                                     value = irrigationMinutes,
                                     onValueChange = { irrigationMinutes = it },
@@ -150,32 +151,31 @@ fun CropLogScreen(
                                 )
                             }
 
-                            "Notas", "Enfermedad" -> {
+                            strings.eventNotes, strings.eventDisease -> {
                                 OutlinedTextField(
                                     value = notesContent,
                                     onValueChange = { notesContent = it },
-                                    label = { Text(if(selectedEventType == "Enfermedad") "Síntomas..." else "Escribe tus notas...") },
+                                    label = { Text(if(selectedEventType == strings.eventDisease) strings.cropLogSymptoms else strings.cropLogWriteNotes) },
                                     modifier = Modifier.fillMaxWidth().height(100.dp),
                                     maxLines = 5
                                 )
 
-                                // --- BOTÓN DE CÁMARA (VISUAL SOLAMENTE) ---
                                 OutlinedButton(
-                                    onClick = { /* TODO añadir acción abrir cámara de fotos */ },
+                                    onClick = { /* Cámara */ },
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Icon(Icons.Default.CameraAlt, contentDescription = null)
                                     Spacer(Modifier.width(8.dp))
-                                    Text("Añadir foto")
+                                    Text(strings.cropLogAddPhoto)
                                 }
                             }
 
                             else -> {
-                                Text("Evento: '${selectedEventType}' con fecha de hoy.", style = MaterialTheme.typography.bodySmall)
+                                Text(strings.cropLogEventToday.replace("{0}", selectedEventType), style = MaterialTheme.typography.bodySmall)
                                 OutlinedTextField(
                                     value = notesContent,
                                     onValueChange = { notesContent = it },
-                                    label = { Text("Observaciones (Opcional)") },
+                                    label = { Text(strings.cropLogObservations) },
                                     modifier = Modifier.fillMaxWidth(),
                                     leadingIcon = { Icon(Icons.Default.Edit, null) }
                                 )
@@ -184,18 +184,14 @@ fun CropLogScreen(
                     }
                 },
                 confirmButton = {
-                    Button(onClick = {
-                        // AQUÍ GUARDARÍAS
-                        showAddDialog = false
-                    }) { Text("Guardar") }
+                    Button(onClick = { showAddDialog = false }) { Text(strings.gardenSave) }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showAddDialog = false }) { Text("Cancelar") }
+                    TextButton(onClick = { showAddDialog = false }) { Text(strings.gardenCancel) }
                 }
             )
         }
 
-        // Lista de entradas existentes
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(16.dp),
@@ -205,17 +201,32 @@ fun CropLogScreen(
                 Card(modifier = Modifier.fillMaxWidth()) {
                     ListItem(
                         headlineContent = {
-                            Text("Maceta ${pot.fila + 1},${pot.columna + 1}: ${pot.nombrePlanta}")
+                            Text(
+                                strings.cropLogEntry
+                                    .replace("{0}", (pot.fila + 1).toString())
+                                    .replace("{1}", (pot.columna + 1).toString())
+                                    .replace("{2}", pot.nombrePlanta ?: "?")
+                            )
                         },
                         supportingContent = {
-                            Text("${pot.tipoAccion} el ${pot.fechaSiembra?.toHumanDateString()}")
+                            val action = when(pot.tipoAccion) {
+                                "Plantar" -> strings.gardenActionPlant
+                                "Sembrar" -> strings.gardenActionSow
+                                else -> pot.tipoAccion ?: ""
+                            }
+                            val dateStr = pot.fechaSiembra?.toHumanDateString() ?: strings.cropLogRecently
+                            Text(
+                                strings.cropLogStatus
+                                    .replace("{0}", action)
+                                    .replace("{1}", dateStr)
+                            )
                         }
                     )
                 }
             }
             if (flowerpots.isEmpty()) {
                 item {
-                    Text("No hay actividades registradas.", modifier = Modifier.padding(16.dp))
+                    Text(strings.cropLogNoEntries, modifier = Modifier.padding(16.dp))
                 }
             }
         }

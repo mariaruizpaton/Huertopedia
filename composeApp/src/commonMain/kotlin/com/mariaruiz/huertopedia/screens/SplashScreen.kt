@@ -12,15 +12,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.mariaruiz.huertopedia.i18n.LocalStrings
 
 @Composable
 fun SplashScreen() {
+    val strings = LocalStrings.current
+    
     Box(
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary),
         contentAlignment = Alignment.Center
     ) {
-        // Pon aquí el nombre de tu app o un logo
-        Text("Huertopedia", color = Color.White, style = MaterialTheme.typography.headlineLarge)
+        // Usamos el nombre de la app desde las traducciones
+        Text(
+            text = strings.appName, 
+            color = Color.White, 
+            style = MaterialTheme.typography.headlineLarge
+        )
+        
         CircularProgressIndicator(
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 64.dp),
             color = Color.White
