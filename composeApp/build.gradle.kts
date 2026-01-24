@@ -79,6 +79,8 @@ kotlin {
 
             // Para el cambio de idioma
             implementation("com.russhwolf:multiplatform-settings-no-arg:1.2.0")
+
+            implementation("dev.icerock.moko:permissions-compose:0.18.0")
         }
 
         val iosMain by getting {

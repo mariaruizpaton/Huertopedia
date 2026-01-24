@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mariaruiz.huertopedia.model.*
 import com.mariaruiz.huertopedia.utils.getCurrentTimeMillis
+import com.mariaruiz.huertopedia.utils.toFirebaseData
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.auth.auth
 import dev.gitlive.firebase.firestore.firestore
@@ -149,20 +150,42 @@ class GardenViewModel : ViewModel() {
             }
     }
 
-    fun addCropLogEntry(log: CropLog) {
+    fun addCropLogEntry(log: CropLog, imageBytes: ByteArray? = null) {
         val uid = auth.currentUser?.uid ?: return
         viewModelScope.launch {
             try {
+                var finalLog = log
+
+                // 1. Si hay foto, la subimos y OBTENEMOS LA URL PÚBLICA
+                if (imageBytes != null) {
+                    val imagePath = "crop_logs/${log.planterId}/${log.timestamp}.jpg"
+                    try {
+                        val storageRef = storage.reference.child(imagePath)
+
+                        // A. Subir los bytes
+                        storageRef.putData(imageBytes.toFirebaseData())
+
+                        // B. ¡IMPORTANTE! Obtener la URL de descarga (https://...)
+                        val downloadUrl = storageRef.getDownloadUrl()
+
+                        // C. Guardamos la URL en el log, no la ruta interna
+                        finalLog = log.copy(photoPath = downloadUrl)
+
+                    } catch (e: Exception) {
+                        println("Error subiendo imagen: ${e.message}")
+                    }
+                }
+
+                // 2. Guardamos en Firestore (igual que antes)
                 val collectionRef = db.collection("usuario").document(uid)
                     .collection("planters").document(log.planterId)
                     .collection("crop_log")
 
-                val newDocRef = collectionRef.add(log)
-                
+                val newDocRef = collectionRef.add(finalLog)
                 collectionRef.document(newDocRef.id).update("id" to newDocRef.id)
 
             } catch (e: Exception) {
-                println("Error al añadir entrada al diario: ${e.message}")
+                println("Error al añadir entrada: ${e.message}")
             }
         }
     }

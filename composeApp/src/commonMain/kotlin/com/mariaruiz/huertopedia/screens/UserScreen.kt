@@ -2,7 +2,6 @@ package com.mariaruiz.huertopedia.screens
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -31,8 +30,14 @@ import com.mariaruiz.huertopedia.repositories.LanguageRepository
 import com.mariaruiz.huertopedia.repositories.ThemeRepository
 import com.mariaruiz.huertopedia.components.LanguageButton
 import com.mariaruiz.huertopedia.i18n.LocalStrings
+import dev.icerock.moko.permissions.DeniedAlwaysException
+import dev.icerock.moko.permissions.DeniedException
 import io.kamel.core.Resource
 import kotlinx.coroutines.launch
+import dev.icerock.moko.permissions.Permission
+import dev.icerock.moko.permissions.compose.BindEffect
+import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
+// ------------------------------------
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,6 +57,10 @@ fun UserScreen(
     var tempDesc by remember { mutableStateOf(viewModel.descripcion) }
     var tempImageBytes by remember { mutableStateOf<ByteArray?>(null) }
 
+    // 1. CONFIGURACIÓN DE PERMISOS
+    val factory = rememberPermissionsControllerFactory()
+    val controller = remember(factory) { factory.createPermissionsController() }
+    BindEffect(controller)
 
     val imagePicker = rememberImagePicker { bytes ->
         tempImageBytes = bytes
@@ -110,7 +119,42 @@ fun UserScreen(
                         .size(120.dp)
                         .clip(CircleShape)
                         .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                        .clickable(enabled = isEditing) { imagePicker.launch() },
+                        // 2. MODIFICAMOS EL CLICKABLE CON PERMISOS
+                        .clickable(enabled = isEditing) {
+                            scope.launch {
+                                try {
+                                    // 1. Intentamos ser educados y pedir permiso (necesario en iOS y Android viejos)
+                                    controller.providePermission(Permission.GALLERY)
+
+                                    // 2. Si dicen que sí, abrimos
+                                    imagePicker.launch()
+
+                                } catch (e: DeniedAlwaysException) {
+                                    // 3. CASO FALSO NEGATIVO (Android 13/14)
+                                    // El sistema dice "No te doy permiso general", pero nos deja usar el picker.
+                                    println("Permiso denegado permanentemente. Intentando abrir galería de todas formas (Lógica Android 14)...")
+
+                                    try {
+                                        // Intentamos abrir sin permiso
+                                        imagePicker.launch()
+                                    } catch (e: Exception) {
+                                        // Si falla aquí, es que DE VERDAD no nos dejan. Abrimos ajustes.
+                                        println("Fallo total. Abriendo ajustes.")
+                                        controller.openAppSettings()
+                                    }
+
+                                } catch (e: DeniedException) {
+                                    // 4. El usuario dijo explícitamente "NO" en el popup ahora mismo.
+                                    // Aquí respetamos su decisión y no hacemos nada.
+                                    println("El usuario ha rechazado el permiso puntualmente.")
+
+                                } catch (e: Exception) {
+                                    // 5. Cualquier otro error raro, intentamos abrir por si acaso.
+                                    e.printStackTrace()
+                                    imagePicker.launch()
+                                }
+                            }
+                        },
                     color = MaterialTheme.colorScheme.surfaceVariant
                 ) {
                     val imageResource: Resource<Painter> = when {
@@ -137,6 +181,8 @@ fun UserScreen(
                         )
                     }
                 }
+
+                // Icono de la cámara pequeño (visual)
                 if (isEditing) {
                     Surface(
                         modifier = Modifier.size(32.dp).clip(CircleShape),
@@ -146,6 +192,8 @@ fun UserScreen(
                     }
                 }
             }
+
+            // ... resto del código igual (text fields, botones, etc) ...
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -188,6 +236,8 @@ fun UserScreen(
                     }
                 }
             } else {
+                // ... (Bloque de visualización que ya tenías) ...
+
                 // TARJETA DE INFORMACIÓN CENTRADA
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -197,19 +247,19 @@ fun UserScreen(
                 ) {
                     Column(
                         modifier = Modifier.padding(24.dp).fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally // Centrado horizontal
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
                             text = viewModel.name ?: "Usuario",
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
-                            textAlign = TextAlign.Center // Centrado de texto
+                            textAlign = TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = viewModel.descripcion.ifEmpty { strings.welcomeSubtitle },
-                            textAlign = TextAlign.Center, // Centrado de texto largo
+                            textAlign = TextAlign.Center,
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
