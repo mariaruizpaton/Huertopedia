@@ -12,7 +12,6 @@ import kotlinx.coroutines.launch
 import androidx.lifecycle.viewModelScope
 import com.mariaruiz.huertopedia.utils.toFirebaseData
 import dev.gitlive.firebase.storage.storage
-import dev.gitlive.firebase.storage.Data
 
 class LoginViewModel : ViewModel() {
     var name by mutableStateOf<String?>(null)
@@ -143,7 +142,7 @@ class LoginViewModel : ViewModel() {
     var imagenUrl by mutableStateOf("")
     var userId by mutableStateOf("")
 
-    fun uploadImageBytes(bytes: ByteArray) {
+    fun uploadImageBytes(bytes: ByteArray, function: () -> Unit) {
         if (userId.isBlank()) return
 
         viewModelScope.launch {

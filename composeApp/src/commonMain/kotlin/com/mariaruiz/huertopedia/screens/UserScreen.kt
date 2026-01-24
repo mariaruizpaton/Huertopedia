@@ -1,11 +1,15 @@
 package com.mariaruiz.huertopedia.screens
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,11 +17,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.mariaruiz.huertopedia.utils.BackHandler
 import com.mariaruiz.huertopedia.utils.rememberImagePicker
 import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
@@ -27,6 +31,7 @@ import com.mariaruiz.huertopedia.repositories.LanguageRepository
 import com.mariaruiz.huertopedia.repositories.ThemeRepository
 import com.mariaruiz.huertopedia.components.LanguageButton
 import com.mariaruiz.huertopedia.i18n.LocalStrings
+import io.kamel.core.Resource
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,19 +46,23 @@ fun UserScreen(
     val strings = LocalStrings.current
     val themePref by themeRepository.themePreference.collectAsState()
     val scope = rememberCoroutineScope()
-    
+
     var isEditing by remember { mutableStateOf(false) }
     var tempNombre by remember { mutableStateOf(viewModel.name ?: "") }
     var tempDesc by remember { mutableStateOf(viewModel.descripcion) }
+    var tempImageBytes by remember { mutableStateOf<ByteArray?>(null) }
+
 
     val imagePicker = rememberImagePicker { bytes ->
-        bytes?.let { viewModel.uploadImageBytes(it) }
+        tempImageBytes = bytes
     }
 
     LaunchedEffect(isEditing) {
         if (isEditing) {
             tempNombre = viewModel.name ?: ""
             tempDesc = viewModel.descripcion
+        } else {
+            tempImageBytes = null
         }
     }
 
@@ -71,7 +80,7 @@ fun UserScreen(
                 title = { Text(strings.profileTitle, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = strings.detailBack)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings.detailBack)
                     }
                 },
                 actions = {
@@ -104,10 +113,16 @@ fun UserScreen(
                         .clickable(enabled = isEditing) { imagePicker.launch() },
                     color = MaterialTheme.colorScheme.surfaceVariant
                 ) {
-                    val path = viewModel.imagenUrlRenderizable
-                    if (!path.isNullOrEmpty()) {
+                    val imageResource: Resource<Painter> = when {
+                        tempImageBytes != null -> asyncPainterResource(data = tempImageBytes!!)
+                        !viewModel.imagenUrlRenderizable.isNullOrEmpty() -> asyncPainterResource(data = viewModel.imagenUrlRenderizable!!)
+                        else -> asyncPainterResource(data = Unit) // Placeholder or error
+                    }
+
+
+                    if (tempImageBytes != null || !viewModel.imagenUrlRenderizable.isNullOrEmpty()) {
                         KamelImage(
-                            resource = asyncPainterResource(data = path),
+                            resource = imageResource,
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize(),
@@ -115,16 +130,16 @@ fun UserScreen(
                         )
                     } else {
                         Icon(
-                            imageVector = Icons.Default.Person, 
-                            contentDescription = null, 
-                            modifier = Modifier.padding(24.dp), 
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            modifier = Modifier.padding(24.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
                 if (isEditing) {
                     Surface(
-                        modifier = Modifier.size(32.dp).clip(CircleShape), 
+                        modifier = Modifier.size(32.dp).clip(CircleShape),
                         color = MaterialTheme.colorScheme.secondary
                     ) {
                         Icon(Icons.Filled.CameraAlt, null, Modifier.padding(6.dp), Color.White)
@@ -158,7 +173,13 @@ fun UserScreen(
                     }
                     Button(
                         onClick = {
-                            viewModel.updateUserData(tempNombre, tempDesc, viewModel.imagenUrl)
+                            if (tempImageBytes != null) {
+                                viewModel.uploadImageBytes(tempImageBytes!!) {
+                                    viewModel.updateUserData(tempNombre, tempDesc, viewModel.imagenUrl)
+                                }
+                            } else {
+                                viewModel.updateUserData(tempNombre, tempDesc, viewModel.imagenUrl)
+                            }
                             isEditing = false
                         },
                         modifier = Modifier.weight(1f)
@@ -194,11 +215,11 @@ fun UserScreen(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(32.dp))
 
-                Divider(Modifier.padding(bottom = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                
+                HorizontalDivider(Modifier.padding(bottom = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
+
                 // AJUSTES
                 Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
                     Text(strings.changeLanguage, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onBackground)
