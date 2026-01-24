@@ -2,12 +2,14 @@ package com.mariaruiz.huertopedia.model
 
 import kotlinx.serialization.Serializable
 
-// Diario de Cultivo
 @Serializable
 data class CropLog(
-    val id: String = "", // CropLog-NombreJardinera
-    val fecha: Long = 0L,
-    val nota: String = "",
-    val urlFoto: String? = null,
-    val tipoEvento: String = "Observación" // Ej: Riego, Abono, Cosecha...
+    val id: String = "",
+    val planterId: String,
+    val timestamp: Long,
+    val eventType: String,
+    val notes: String? = null,
+    val irrigationType: String? = null,
+    val irrigationMinutes: Int? = null,
+    val photoPath: String? = null
 )

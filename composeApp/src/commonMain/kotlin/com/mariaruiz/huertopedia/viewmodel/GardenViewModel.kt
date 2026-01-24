@@ -3,6 +3,7 @@ package com.mariaruiz.huertopedia.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mariaruiz.huertopedia.model.*
+import com.mariaruiz.huertopedia.utils.getCurrentTimeMillis
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.auth.auth
 import dev.gitlive.firebase.firestore.firestore
@@ -10,7 +11,6 @@ import dev.gitlive.firebase.storage.storage
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import com.mariaruiz.huertopedia.utils.getCurrentTimeMillis
 
 class GardenViewModel : ViewModel() {
     private val auth = Firebase.auth
@@ -129,6 +129,59 @@ class GardenViewModel : ViewModel() {
             }
         }
     }
+    fun observeCropLogs(planterId: String): Flow<List<CropLog>> {
+        val uid = auth.currentUser?.uid
+        if (uid == null || planterId.isBlank()) return flowOf(emptyList())
+
+        return db.collection("usuario").document(uid)
+            .collection("planters").document(planterId)
+            .collection("crop_log")
+            .snapshots()
+            .map { snapshot ->
+                snapshot.documents.mapNotNull {
+                    try {
+                        it.data<CropLog>().copy(id = it.id)
+                    } catch (e: Exception) {
+                        println("Error al mapear CropLog: ${e.message}")
+                        null
+                    }
+                }
+            }
+    }
+
+    fun addCropLogEntry(log: CropLog) {
+        val uid = auth.currentUser?.uid ?: return
+        viewModelScope.launch {
+            try {
+                val collectionRef = db.collection("usuario").document(uid)
+                    .collection("planters").document(log.planterId)
+                    .collection("crop_log")
+
+                val newDocRef = collectionRef.add(log)
+                
+                collectionRef.document(newDocRef.id).update("id" to newDocRef.id)
+
+            } catch (e: Exception) {
+                println("Error al añadir entrada al diario: ${e.message}")
+            }
+        }
+    }
+    fun deleteCropLogEntry(planterId: String, logId: String) {
+        val uid = auth.currentUser?.uid ?: return
+        if (planterId.isBlank() || logId.isBlank()) return
+
+        viewModelScope.launch {
+            try {
+                db.collection("usuario").document(uid)
+                    .collection("planters").document(planterId)
+                    .collection("crop_log").document(logId)
+                    .delete()
+            } catch (e: Exception) {
+                println("Error al borrar la entrada del diario: ${e.message}")
+            }
+        }
+    }
+
 
     fun loadAvailablePlants() {
         viewModelScope.launch {
@@ -139,7 +192,7 @@ class GardenViewModel : ViewModel() {
                         id = doc.id,
                         nombreComun = doc.get<String>("nombre_comun") ?: "",
                         nombreCientifico = doc.get<String>("nombre_cientifico") ?: "",
-                        categoria = doc.get<String>("categoria") ?: "", 
+                        categoria = doc.get<String>("categoria") ?: "",
                         imagenUrl = doc.get<String>("imagen_url"),
                         siembra = doc.get<String>("siembra") ?: "",
                         recoleccion = doc.get<String>("recoleccion") ?: "", // CORREGIDO: Sin tilde

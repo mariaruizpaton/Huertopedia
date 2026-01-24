@@ -102,6 +102,8 @@ interface AppStrings {
     val cropLogAddPhoto: String
     val cropLogObservations: String
     val cropLogEventToday: String
+    val cropLogDeleteEntryTitle: String
+    val cropLogDeleteEntry: String
     
     // Event Types
     val eventNotes: String
@@ -224,7 +226,9 @@ object EnStrings : AppStrings {
     override val cropLogAddPhoto = "Add photo"
     override val cropLogObservations = "Observations (Optional)"
     override val cropLogEventToday = "Event: '{0}' with today's date."
-    
+    override val cropLogDeleteEntryTitle = "Delete Entry?"
+    override val cropLogDeleteEntry = "Are you sure you want to delete this log entry? This action cannot be undone."
+
     override val eventNotes = "Notes"
     override val eventIrrigation = "Irrigation"
     override val eventGermination = "Germination"
@@ -343,7 +347,9 @@ object EsStrings : AppStrings {
     override val cropLogAddPhoto = "Añadir foto"
     override val cropLogObservations = "Observaciones (Opcional)"
     override val cropLogEventToday = "Evento: '{0}' con fecha de hoy."
-    
+    override val cropLogDeleteEntryTitle = "¿Eliminar Entrada?"
+    override val cropLogDeleteEntry = "¿Estás seguro de que quieres eliminar esta entrada del diario? Esta acción no se puede deshacer."
+
     override val eventNotes = "Notas"
     override val eventIrrigation = "Riego"
     override val eventGermination = "Germinación"
@@ -365,6 +371,7 @@ object EsStrings : AppStrings {
     override val errorUnknown = "Ha ocurrido un error inesperado."
     override val errorFieldsEmpty = "Rellena todos los campos para continuar."
     override val errorNameEmpty = "El nombre no puede estar vacío."
+
 }
 
 val LocalStrings = staticCompositionLocalOf<AppStrings> { EsStrings }
