@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
@@ -57,7 +58,8 @@ fun WikiScreen(
                     }
                 }
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
             Column(modifier = Modifier.padding(16.dp)) {
@@ -113,6 +115,9 @@ fun PlantCard(plant: Plant, onClick: () -> Unit) {
             .padding(8.dp)
             .fillMaxWidth(),
         onClick = onClick,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
@@ -122,17 +127,21 @@ fun PlantCard(plant: Plant, onClick: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            val placeholderColor = MaterialTheme.colorScheme.surfaceVariant
+            
             if (!plant.imagenUrl.isNullOrBlank()) {
                 KamelImage(
                     resource = asyncPainterResource(data = plant.imagenUrl),
                     contentDescription = plant.nombreComun,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.size(100.dp),
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(MaterialTheme.shapes.medium),
                     onFailure = {
                         Box(
                             modifier = Modifier
                                 .size(100.dp)
-                                .background(Color.LightGray)
+                                .background(placeholderColor)
                         )
                     }
                 )
@@ -140,10 +149,15 @@ fun PlantCard(plant: Plant, onClick: () -> Unit) {
                 Box(
                     modifier = Modifier
                         .size(100.dp)
-                        .background(Color.LightGray),
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(placeholderColor),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(strings.wikiNoPhoto, style = MaterialTheme.typography.labelSmall)
+                    Text(
+                        text = strings.wikiNoPhoto, 
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 
@@ -153,6 +167,7 @@ fun PlantCard(plant: Plant, onClick: () -> Unit) {
                 text = plant.nombreComun,
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1
             )
 
@@ -160,7 +175,7 @@ fun PlantCard(plant: Plant, onClick: () -> Unit) {
                 text = plant.categoria,
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

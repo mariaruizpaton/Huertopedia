@@ -37,11 +37,13 @@ interface AppStrings {
 
     // Detail
     val detailTitle: String
+    val detailScientificName: String
+    val detailSowing: String
     val detailHarvest: String
-    val detailHarvestDays: String
     val detailWatering: String
-    val detailSoil: String
-    val detailSeason: String
+    val detailFertilizer: String
+    val detailTemperature: String
+    val detailCare: String
     val detailFriends: String
     val detailEnemies: String
     val detailNotSpecified: String
@@ -76,6 +78,12 @@ interface AppStrings {
     val gardenEditNameTitle: String
     val gardenNewNameLabel: String
     val gardenSave: String
+
+    // Theme (NUEVO)
+    val themeTitle: String
+    val themeLight: String
+    val themeDark: String
+    val themeSystem: String
 
     // CropLog
     val cropLogTitle: String
@@ -154,11 +162,13 @@ object EnStrings : AppStrings {
     override val wikiNoPhoto = "No photo"
 
     override val detailTitle = "Plant Details"
+    override val detailScientificName = "Scientific Name"
+    override val detailSowing = "Sowing"
     override val detailHarvest = "Harvest"
-    override val detailHarvestDays = "{0} days"
     override val detailWatering = "Watering"
-    override val detailSoil = "Recommended soil"
-    override val detailSeason = "Planting season"
+    override val detailFertilizer = "Fertilizer"
+    override val detailTemperature = "Optimal Temperature"
+    override val detailCare = "Care Tips"
     override val detailFriends = "Companion plants"
     override val detailEnemies = "Combative plants"
     override val detailNotSpecified = "Not specified"
@@ -192,6 +202,11 @@ object EnStrings : AppStrings {
     override val gardenEditNameTitle = "Edit name"
     override val gardenNewNameLabel = "New name"
     override val gardenSave = "Save"
+
+    override val themeTitle = "App Theme"
+    override val themeLight = "Light"
+    override val themeDark = "Dark"
+    override val themeSystem = "System"
 
     override val cropLogTitle = "Log: {0}"
     override val cropLogEntry = "Pot {0},{1}: {2}"
@@ -266,11 +281,13 @@ object EsStrings : AppStrings {
     override val wikiNoPhoto = "Sin foto"
 
     override val detailTitle = "Detalles de la planta"
-    override val detailHarvest = "Cosecha"
-    override val detailHarvestDays = "{0} días"
+    override val detailScientificName = "Nombre Científico"
+    override val detailSowing = "Siembra"
+    override val detailHarvest = "Recolección"
     override val detailWatering = "Riego"
-    override val detailSoil = "Sustrato recomendado"
-    override val detailSeason = "Temporada de siembra"
+    override val detailFertilizer = "Abono"
+    override val detailTemperature = "Temperatura Óptima"
+    override val detailCare = "Cuidados"
     override val detailFriends = "Plantas amigas"
     override val detailEnemies = "Plantas enemigas"
     override val detailNotSpecified = "No especificado"
@@ -304,6 +321,11 @@ object EsStrings : AppStrings {
     override val gardenEditNameTitle = "Editar nombre"
     override val gardenNewNameLabel = "Nuevo nombre"
     override val gardenSave = "Guardar"
+
+    override val themeTitle = "Tema de la App"
+    override val themeLight = "Claro"
+    override val themeDark = "Oscuro"
+    override val themeSystem = "Sistema"
 
     override val cropLogTitle = "Diario: {0}"
     override val cropLogEntry = "Maceta {0},{1}: {2}"

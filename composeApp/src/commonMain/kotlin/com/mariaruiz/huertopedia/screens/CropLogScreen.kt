@@ -68,18 +68,7 @@ fun CropLogScreen(
                 }
             )
         },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    selectedEventType = eventTypes[0]
-                    notesContent = ""
-                    irrigationMinutes = 10f
-                    showAddDialog = true
-                }
-            ) {
-                Icon(Icons.Default.Add, contentDescription = strings.cropLogAddEntry)
-            }
-        }
+        containerColor = MaterialTheme.colorScheme.background // Limpieza Modo Oscuro
     ) { padding ->
 
         // --- DIÁLOGO DE NUEVA ENTRADA ---
@@ -123,7 +112,7 @@ fun CropLogScreen(
                             }
                         }
 
-                        Divider()
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant) // Limpieza Modo Oscuro
 
                         // 2. CONTROLES DINÁMICOS
                         when (selectedEventType) {
@@ -198,14 +187,18 @@ fun CropLogScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(flowerpots) { pot ->
-                Card(modifier = Modifier.fillMaxWidth()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface) // Limpieza Modo Oscuro
+                ) {
                     ListItem(
                         headlineContent = {
                             Text(
                                 strings.cropLogEntry
                                     .replace("{0}", (pot.fila + 1).toString())
                                     .replace("{1}", (pot.columna + 1).toString())
-                                    .replace("{2}", pot.nombrePlanta ?: "?")
+                                    .replace("{2}", pot.nombrePlanta ?: "?"),
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         },
                         supportingContent = {
@@ -218,7 +211,8 @@ fun CropLogScreen(
                             Text(
                                 strings.cropLogStatus
                                     .replace("{0}", action)
-                                    .replace("{1}", dateStr)
+                                    .replace("{1}", dateStr),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     )
@@ -226,7 +220,11 @@ fun CropLogScreen(
             }
             if (flowerpots.isEmpty()) {
                 item {
-                    Text(strings.cropLogNoEntries, modifier = Modifier.padding(16.dp))
+                    Text(
+                        text = strings.cropLogNoEntries, 
+                        modifier = Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
                 }
             }
         }

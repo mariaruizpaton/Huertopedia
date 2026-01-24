@@ -6,10 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,8 +24,10 @@ import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import com.mariaruiz.huertopedia.repositories.LanguageRepository
+import com.mariaruiz.huertopedia.repositories.ThemeRepository
 import com.mariaruiz.huertopedia.components.LanguageButton
 import com.mariaruiz.huertopedia.i18n.LocalStrings
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,9 +35,13 @@ fun UserScreen(
     onLogout: () -> Unit,
     onBack: () -> Unit,
     viewModel: LoginViewModel,
-    languageRepository: LanguageRepository
+    languageRepository: LanguageRepository,
+    themeRepository: ThemeRepository
 ) {
     val strings = LocalStrings.current
+    val themePref by themeRepository.themePreference.collectAsState()
+    val scope = rememberCoroutineScope()
+    
     var isEditing by remember { mutableStateOf(false) }
     var tempNombre by remember { mutableStateOf(viewModel.name ?: "") }
     var tempDesc by remember { mutableStateOf(viewModel.descripcion) }
@@ -79,7 +82,8 @@ fun UserScreen(
                     }
                 }
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -90,60 +94,45 @@ fun UserScreen(
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
-            // SECCIÓN DE IMAGEN DE PERFIL
+            // FOTO DE PERFIL
             Box(contentAlignment = Alignment.BottomEnd) {
                 Surface(
                     modifier = Modifier
-                        .size(140.dp)
+                        .size(120.dp)
                         .clip(CircleShape)
-                        .border(4.dp, MaterialTheme.colorScheme.primaryContainer, CircleShape)
+                        .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
                         .clickable(enabled = isEditing) { imagePicker.launch() },
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    tonalElevation = 4.dp
+                    color = MaterialTheme.colorScheme.surfaceVariant
                 ) {
                     val path = viewModel.imagenUrlRenderizable
-
                     if (!path.isNullOrEmpty()) {
                         KamelImage(
                             resource = asyncPainterResource(data = path),
-                            contentDescription = "Foto de perfil",
+                            contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize(),
                             animationSpec = tween(500)
                         )
                     } else {
-                        Surface(
-                            modifier = Modifier.fillMaxSize(),
-                            color = MaterialTheme.colorScheme.surfaceVariant
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = null,
-                                modifier = Modifier.padding(30.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                        Icon(
+                            imageVector = Icons.Default.Person, 
+                            contentDescription = null, 
+                            modifier = Modifier.padding(24.dp), 
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
-
                 if (isEditing) {
                     Surface(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape),
-                        color = MaterialTheme.colorScheme.primary,
-                        contentColor = Color.White
+                        modifier = Modifier.size(32.dp).clip(CircleShape), 
+                        color = MaterialTheme.colorScheme.secondary
                     ) {
-                        Icon(
-                            Icons.Filled.CameraAlt,
-                            contentDescription = null,
-                            modifier = Modifier.padding(8.dp).size(16.dp)
-                        )
+                        Icon(Icons.Filled.CameraAlt, null, Modifier.padding(6.dp), Color.White)
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             if (isEditing) {
                 OutlinedTextField(
@@ -178,30 +167,60 @@ fun UserScreen(
                     }
                 }
             } else {
+                // TARJETA DE INFORMACIÓN CENTRADA
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                    )
                 ) {
                     Column(
-                        modifier = Modifier.padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        modifier = Modifier.padding(24.dp).fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally // Centrado horizontal
                     ) {
                         Text(
                             text = viewModel.name ?: "Usuario",
                             style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center // Centrado de texto
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = viewModel.descripcion.ifEmpty { strings.welcomeSubtitle },
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.bodyLarge
+                            textAlign = TextAlign.Center, // Centrado de texto largo
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(24.dp))
-                LanguageButton(languageRepository)
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Divider(Modifier.padding(bottom = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                
+                // AJUSTES
+                Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
+                    Text(strings.changeLanguage, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onBackground)
+                    LanguageButton(languageRepository)
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
+                    Text(strings.themeTitle, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onBackground)
+                    Row {
+                        IconButton(onClick = { scope.launch { themeRepository.setTheme("light") } }) {
+                            Icon(Icons.Default.LightMode, strings.themeLight, tint = if(themePref == "light") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)
+                        }
+                        IconButton(onClick = { scope.launch { themeRepository.setTheme("dark") } }) {
+                            Icon(Icons.Default.DarkMode, strings.themeDark, tint = if(themePref == "dark") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)
+                        }
+                        IconButton(onClick = { scope.launch { themeRepository.setTheme("system") } }) {
+                            Icon(Icons.Default.SettingsBrightness, strings.themeSystem, tint = if(themePref == "system") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)
+                        }
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.weight(1f))

@@ -38,7 +38,8 @@ fun LoginScreen(
     val strings = LocalStrings.current
     var passwordVisible by remember { mutableStateOf(false) }
 
-    Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF0F4E8))) {
+    // Fondo adaptativo
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         
         Column(
             modifier = Modifier
@@ -52,12 +53,12 @@ fun LoginScreen(
         ) {
             Text(
                 text = if (viewModel.isRegisterMode) strings.loginCreateAccount else strings.loginWelcome,
-                style = MaterialTheme.typography.headlineLarge
+                style = MaterialTheme.typography.headlineLarge,
+                color = MaterialTheme.colorScheme.onBackground
             )
             Spacer(modifier = Modifier.height(32.dp))
 
             if (viewModel.errorMessage != null) {
-                // CAMBIO: Ahora mapeamos a las strings del sistema Type-Safe
                 val errorText = when(viewModel.errorMessage) {
                     "error_invalid_credentials" -> strings.errorInvalidCredentials
                     "error_user_not_found" -> strings.errorUserNotFound
@@ -72,19 +73,23 @@ fun LoginScreen(
 
                 Text(
                     text = errorText,
-                    color = Color.Red,
+                    color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
+            // Botón Google Adaptativo
             Button(
                 onClick = {
                     focusManager.clearFocus()
                     onGoogleLoginRequest()
                 },
                 modifier = Modifier.fillMaxWidth().height(50.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                ),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp),
                 shape = RoundedCornerShape(24.dp)
             ) {
@@ -100,27 +105,38 @@ fun LoginScreen(
                         drawLine(Color(0xFF4285F4), androidx.compose.ui.geometry.Offset(width * 1.104f, height / 2), androidx.compose.ui.geometry.Offset(width * 0.55f, height / 2), strokeWidth)
                     }
                     Spacer(modifier = Modifier.width(12.dp))
-                    Text(strings.loginGoogle, color = Color.Gray)
+                    Text(strings.loginGoogle, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
 
             Spacer(modifier = Modifier.height(26.dp))
 
+            // Tabs Login/Registro
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 Button(
                     onClick = { focusManager.clearFocus(); viewModel.isRegisterMode = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = if (!viewModel.isRegisterMode) Color(0xFF4CAF50) else Color.Gray)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (!viewModel.isRegisterMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = if (!viewModel.isRegisterMode) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 ) { Text(strings.loginSignIn) }
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
                     onClick = { focusManager.clearFocus(); viewModel.isRegisterMode = true },
-                    colors = ButtonDefaults.buttonColors(containerColor = if (viewModel.isRegisterMode) Color(0xFF4CAF50) else Color.Gray)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (viewModel.isRegisterMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = if (viewModel.isRegisterMode) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 ) { Text(strings.loginRegister) }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White)) {
+            // Formulario
+            Card(
+                modifier = Modifier.fillMaxWidth(), 
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     AnimatedVisibility(visible = viewModel.isRegisterMode) {
                         Column {

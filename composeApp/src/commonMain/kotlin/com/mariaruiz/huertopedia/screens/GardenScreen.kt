@@ -86,25 +86,36 @@ fun GardenScreen(
                 }
             )
         },
+        containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
-            Column(horizontalAlignment = Alignment.End) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Botón Actividad (Ahora al lado del botón +)
                 if (selectedPots.isNotEmpty()) {
                     ExtendedFloatingActionButton(
                         onClick = { showPlantDialog = true },
                         icon = { Icon(Icons.Default.Agriculture, null) },
                         text = { Text(strings.gardenActivityButton.replace("{0}", selectedPots.size.toString())) },
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                 }
-                FloatingActionButton(onClick = { showCreateDialog = true }) {
+                
+                // Botón Añadir Jardinera (Siempre visible)
+                FloatingActionButton(
+                    onClick = { showCreateDialog = true },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
                     Icon(Icons.Default.Add, contentDescription = strings.gardenAddPlanter)
                 }
             }
         }
     ) { padding ->
 
-        // --- DIÁLOGO: EDITAR NOMBRE ---
+        // --- DIÁLOGOS (Edit, Error, Create, Plant, Delete) ---
         if (showEditDialog && planterToEdit != null) {
             AlertDialog(
                 onDismissRequest = { showEditDialog = false },
@@ -132,22 +143,18 @@ fun GardenScreen(
             )
         }
 
-        // --- DIÁLOGO: ERROR DE SELECCIÓN ---
         if (showSelectionError) {
             AlertDialog(
                 onDismissRequest = { showSelectionError = false },
-                icon = { Icon(Icons.Default.Info, contentDescription = null) },
+                icon = { Icon(Icons.Default.Info, null) },
                 title = { Text(strings.gardenSelectionErrorTitle) },
-                text = {
-                    Text(text = strings.gardenSelectionErrorText, fontSize = 18.sp)
-                },
+                text = { Text(text = strings.gardenSelectionErrorText, fontSize = 18.sp) },
                 confirmButton = {
                     TextButton(onClick = { showSelectionError = false }) { Text(strings.gardenOk) }
                 }
             )
         }
 
-        // --- DIÁLOGO: CREAR JARDINERA ---
         if (showCreateDialog) {
             AlertDialog(
                 onDismissRequest = { showCreateDialog = false },
@@ -175,7 +182,6 @@ fun GardenScreen(
             )
         }
 
-        // --- DIÁLOGO: ACTIVIDADES ---
         if (showPlantDialog) {
             AlertDialog(
                 onDismissRequest = { showPlantDialog = false },
@@ -221,7 +227,10 @@ fun GardenScreen(
                                     modifier = Modifier.fillMaxWidth().clickable { expandedPlantMenu = true },
                                     trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
                                     enabled = false,
-                                    colors = OutlinedTextFieldDefaults.colors(disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledBorderColor = MaterialTheme.colorScheme.outline)
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        disabledTextColor = MaterialTheme.colorScheme.onSurface, 
+                                        disabledBorderColor = MaterialTheme.colorScheme.outline
+                                    )
                                 )
                                 Box(Modifier.matchParentSize().clickable { expandedPlantMenu = true })
                                 DropdownMenu(expanded = expandedPlantMenu, onDismissRequest = { expandedPlantMenu = false }) {
@@ -253,7 +262,6 @@ fun GardenScreen(
             )
         }
 
-        // --- DIÁLOGO: CONFIRMAR BORRADO ---
         if (showDeleteConfirm && planterToDelete != null) {
             AlertDialog(
                 onDismissRequest = { showDeleteConfirm = false },
@@ -269,9 +277,10 @@ fun GardenScreen(
             )
         }
 
+        // --- LISTA DE JARDINERAS ---
         if (myPlanters.isEmpty()) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text(strings.gardenNoPlanters)
+                Text(strings.gardenNoPlanters, color = MaterialTheme.colorScheme.onBackground)
             }
         } else {
             LazyColumn(
@@ -330,23 +339,25 @@ fun PlanterCard(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(Modifier.padding(16.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                    Text(planter.nombre, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Text(planter.nombre, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                     IconButton(onClick = onEditName, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Default.Edit, contentDescription = strings.gardenEditNameTitle, modifier = Modifier.size(18.dp), tint = Color.Gray)
+                        Icon(Icons.Default.Edit, contentDescription = strings.gardenEditNameTitle, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.outline)
                     }
                 }
-                IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, null, tint = Color.Red) }
+                IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error) }
             }
             Text(
                 text = strings.gardenPlanterSize
                     .replace("{0}", planter.filas.toString())
                     .replace("{1}", planter.columnas.toString()), 
                 style = MaterialTheme.typography.bodySmall, 
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
 
@@ -382,14 +393,14 @@ fun PlanterCard(
 fun FlowerpotView(pot: GardenFlowerpot?, isSelected: Boolean, modifier: Modifier, onClick: () -> Unit) {
     val bgColor = when {
         isSelected -> Color(0xFFFFF176)
-        pot == null -> Color.LightGray.copy(alpha = 0.3f)
+        pot == null -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         pot.tipoAccion == "Sembrar" -> Color(0xFFE1BEE7)
         else -> Color(0xFFE8F5E9)
     }
     
     val borderColor = when {
         isSelected -> Color(0xFFFBC02D)
-        pot == null -> Color.Gray
+        pot == null -> MaterialTheme.colorScheme.outline
         pot.tipoAccion == "Sembrar" -> Color(0xFF9C27B0)
         else -> Color(0xFF4CAF50)
     }
@@ -403,7 +414,7 @@ fun FlowerpotView(pot: GardenFlowerpot?, isSelected: Boolean, modifier: Modifier
         contentAlignment = Alignment.Center
     ) {
         if (pot == null) {
-            Icon(if (isSelected) Icons.Default.Check else Icons.Default.Add, null, tint = Color.Gray, modifier = Modifier.size(20.dp))
+            Icon(if (isSelected) Icons.Default.Check else Icons.Default.Add, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
         } else {
             if (!pot.imagenUrl.isNullOrBlank()) {
                 KamelImage(
@@ -413,7 +424,12 @@ fun FlowerpotView(pot: GardenFlowerpot?, isSelected: Boolean, modifier: Modifier
                     modifier = Modifier.fillMaxSize().padding(4.dp).clip(RoundedCornerShape(4.dp))
                 )
             } else {
-                Text(pot.nombrePlanta?.take(8) ?: "?", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = pot.nombrePlanta?.take(8) ?: "?", 
+                    fontSize = 10.sp, 
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
             }
         }
     }
@@ -422,10 +438,10 @@ fun FlowerpotView(pot: GardenFlowerpot?, isSelected: Boolean, modifier: Modifier
 @Composable
 fun NumberSelector(label: String, value: Int, onValueChange: (Int) -> Unit, range: IntRange) {
     Column {
-        Text(label, style = MaterialTheme.typography.labelSmall)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { if (value > range.first) onValueChange(value - 1) }, enabled = value > range.first) { Icon(Icons.Default.Remove, null) }
-            Text(value.toString(), fontWeight = FontWeight.Bold)
+            Text(value.toString(), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
             IconButton(onClick = { if (value < range.last) onValueChange(value + 1) }, enabled = value < range.last) { Icon(Icons.Default.Add, null) }
         }
     }

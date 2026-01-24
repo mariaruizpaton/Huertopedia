@@ -1,11 +1,10 @@
 package com.mariaruiz.huertopedia
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import com.mariaruiz.huertopedia.i18n.EnStrings
 import com.mariaruiz.huertopedia.i18n.EsStrings
 import com.mariaruiz.huertopedia.i18n.LocalStrings
@@ -16,25 +15,13 @@ import com.mariaruiz.huertopedia.viewmodel.GardenViewModel
 import com.mariaruiz.huertopedia.model.Plant
 import com.mariaruiz.huertopedia.model.Planter
 import com.mariaruiz.huertopedia.repositories.LanguageRepository
+import com.mariaruiz.huertopedia.repositories.ThemeRepository
+import com.mariaruiz.huertopedia.theme.DarkGardenColors
+import com.mariaruiz.huertopedia.theme.LightGardenColors
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
-private val GardenColorScheme = lightColorScheme(
-    primary = Color(0xFF4CAF50),
-    background = Color(0xFFF0F4E8),
-    surface = Color.White,
-    onPrimary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F)
-)
-
 enum class Screen {
-    Login,
-    User,
-    Home,
-    Wiki,
-    GardenManagement,
-    PlantDetail,
-    CropLog
+    Login, User, Home, Wiki, GardenManagement, PlantDetail, CropLog
 }
 
 @Composable
@@ -44,18 +31,28 @@ fun App(
     onSetupViewModel: (LoginViewModel) -> Unit = {},
     onSetupWikiViewModel: (WikiViewModel) -> Unit = {}
 ) {
+    // 1. Repositorios de Persistencia
     val languageRepository = remember { LanguageRepository() }
-    val currentLangCode by languageRepository.currentLanguage.collectAsState()
+    val themeRepository = remember { ThemeRepository() }
 
-    // Determinamos el objeto de strings según el código guardado
+    // 2. Estados de Idioma
+    val currentLangCode by languageRepository.currentLanguage.collectAsState()
     val strings = when (currentLangCode) {
         "en" -> EnStrings
         else -> EsStrings
     }
 
-    // Proveemos el idioma a toda la App
+    // 3. Estados de Tema (Oscuro/Claro)
+    val themePref by themeRepository.themePreference.collectAsState()
+    val isDarkTheme = when (themePref) {
+        "light" -> false
+        "dark" -> true
+        else -> isSystemInDarkTheme()
+    }
+    val colors = if (isDarkTheme) DarkGardenColors else LightGardenColors
+
     CompositionLocalProvider(LocalStrings provides strings) {
-        MaterialTheme(colorScheme = GardenColorScheme) {
+        MaterialTheme(colorScheme = colors) {
             val viewModel = remember { LoginViewModel() }
             val wikiViewModel = remember { WikiViewModel() }
             val gardenViewModel = remember { GardenViewModel() }
@@ -78,7 +75,7 @@ fun App(
                     Screen.Login -> {
                         LoginScreen(
                             viewModel = viewModel,
-                            languageRepository = languageRepository, // Pasamos el repo para el botón
+                            languageRepository = languageRepository,
                             onGoogleLoginRequest = {
                                 onGoogleLogin { success ->
                                     if (success) currentScreen.value = Screen.Home
@@ -91,7 +88,8 @@ fun App(
                             onLogout = { viewModel.logout() },
                             onBack = { currentScreen.value = Screen.Home },
                             viewModel = viewModel,
-                            languageRepository = languageRepository
+                            languageRepository = languageRepository,
+                            themeRepository = themeRepository // Pasamos el repo para el Switch
                         )
                     }
                     Screen.Home -> {

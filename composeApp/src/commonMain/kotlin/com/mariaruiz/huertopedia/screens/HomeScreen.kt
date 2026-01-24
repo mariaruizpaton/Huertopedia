@@ -32,7 +32,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mariaruiz.huertopedia.theme.GardenGreen
 import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
 import com.mariaruiz.huertopedia.i18n.LocalStrings
 
@@ -60,7 +59,7 @@ fun HomeScreen(
                     Box(
                         modifier = Modifier
                             .size(40.dp)
-                            .background(Color.LightGray.copy(alpha = 0.3f), CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
                             .clickable { showMenu = true },
                         contentAlignment = Alignment.Center
                     ) {
@@ -93,12 +92,12 @@ fun HomeScreen(
                 text = strings.homeWelcome.replace("{0}", viewModel.name ?: "Usuario"),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = MaterialTheme.colorScheme.onBackground
             )
             Text(
                 text = strings.welcomeSubtitle,
                 style = MaterialTheme.typography.bodyLarge,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -124,7 +123,7 @@ fun HomeScreen(
             Text(
                 text = strings.homeLastActivity,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -132,14 +131,18 @@ fun HomeScreen(
             Surface(
                 modifier = Modifier
                     .padding(bottom = 32.dp)
-                    .border(1.dp, GardenGreen.copy(alpha = 0.5f), RoundedCornerShape(16.dp)),
+                    .border(
+                        width = 1.dp, 
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), 
+                        shape = RoundedCornerShape(16.dp)
+                    ),
                 shape = RoundedCornerShape(16.dp),
-                color = Color.White
+                color = MaterialTheme.colorScheme.surface
             ) {
                 Text(
                     text = strings.homeActivitySample,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    color = GardenGreen,
+                    color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -159,7 +162,7 @@ fun HomeCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -171,7 +174,7 @@ fun HomeCard(
             Box(
                 modifier = Modifier
                     .size(80.dp)
-                    .background(Color(0xFFF5F5F5), RoundedCornerShape(12.dp)),
+                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(iconEmoji, fontSize = 40.sp)
@@ -183,6 +186,7 @@ fun HomeCard(
                 text = title,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
 
@@ -191,7 +195,7 @@ fun HomeCard(
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
         }

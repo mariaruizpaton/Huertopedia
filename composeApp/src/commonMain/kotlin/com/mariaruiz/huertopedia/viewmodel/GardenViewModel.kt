@@ -28,7 +28,6 @@ class GardenViewModel : ViewModel() {
         observePlanters()
     }
 
-    // CORRECCIÓN: Usamos flatMapLatest para cerrar el escuchador anterior al cambiar de usuario
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observePlanters() {
         auth.authStateChanged
@@ -49,7 +48,7 @@ class GardenViewModel : ViewModel() {
                             }
                         }
                 } else {
-                    flowOf(emptyList()) // Si no hay usuario, lista vacía
+                    flowOf(emptyList())
                 }
             }
             .onEach { _planters.value = it }
@@ -63,7 +62,6 @@ class GardenViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                // Enviamos un mapa para evitar que el campo "id" vacío se guarde en la BBDD
                 val data = mapOf(
                     "nombre" to nombre,
                     "filas" to validRows,
@@ -118,7 +116,6 @@ class GardenViewModel : ViewModel() {
     }
 
     fun getFlowerpots(planterId: String): Flow<List<GardenFlowerpot>> {
-        // Obtenemos el UID dentro del flow para asegurar que siempre sea el del usuario actual
         return auth.authStateChanged.flatMapLatest { user ->
             val uid = user?.uid
             if (uid != null && planterId.isNotBlank()) {
@@ -141,13 +138,22 @@ class GardenViewModel : ViewModel() {
                     Plant(
                         id = doc.id,
                         nombreComun = doc.get<String>("nombre_comun") ?: "",
-                        categoria = doc.get<String>("categoria") ?: "",
-                        imagenUrl = doc.get<String>("imagen_url")
+                        nombreCientifico = doc.get<String>("nombre_cientifico") ?: "",
+                        categoria = doc.get<String>("categoria") ?: "", 
+                        imagenUrl = doc.get<String>("imagen_url"),
+                        siembra = doc.get<String>("siembra") ?: "",
+                        recoleccion = doc.get<String>("recoleccion") ?: "", // CORREGIDO: Sin tilde
+                        temperaturaOptima = doc.get<String>("temperatura_optima") ?: "",
+                        riego = doc.get<String>("riego") ?: "",
+                        abono = doc.get<String>("abono") ?: "",
+                        cuidados = doc.get<String>("cuidados") ?: "",
+                        plantasAmigables = doc.get<List<String>>("plantas_amigables") ?: emptyList(),
+                        plantasEnemigas = doc.get<List<String>>("plantas_enemigas") ?: emptyList()
                     )
                 }
                 _availablePlants.value = plants
             } catch (e: Exception) {
-                println("Error catálogo: ${e.message}")
+                println("Error catálogo huerto: ${e.message}")
             }
         }
     }
@@ -170,11 +176,9 @@ class GardenViewModel : ViewModel() {
         if (planterId.isBlank()) return
         viewModelScope.launch {
             try {
-                // Borramos el documento de la jardinera
                 db.collection("usuario").document(uid)
                     .collection("planters").document(planterId)
                     .delete()
-                println("Eliminado correctamente de Firestore")
             } catch (e: Exception) {
                 println("Error al borrar: ${e.message}")
             }

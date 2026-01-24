@@ -17,8 +17,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.mariaruiz.huertopedia.model.Plant
 import com.mariaruiz.huertopedia.utils.BackHandler
 import com.mariaruiz.huertopedia.i18n.LocalStrings
@@ -30,9 +32,7 @@ import io.kamel.image.asyncPainterResource
 fun PlantDetailScreen(plant: Plant, onBack: () -> Unit) {
     val strings = LocalStrings.current
     
-    BackHandler {
-        onBack()
-    }
+    BackHandler { onBack() }
 
     Scaffold(
         topBar = {
@@ -40,27 +40,22 @@ fun PlantDetailScreen(plant: Plant, onBack: () -> Unit) {
                 title = { Text(strings.detailTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = strings.detailBack
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, strings.detailBack)
                     }
                 }
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+            modifier = Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState())
         ) {
-            // CABECERA CON IMAGEN
+            // IMAGEN DE CABECERA - Fondo adaptativo
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(250.dp)
-                    .background(Color(0xFFE8F5E9))
+                    .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f))
             ) {
                 if (!plant.imagenUrl.isNullOrBlank()) {
                     KamelImage(
@@ -70,179 +65,166 @@ fun PlantDetailScreen(plant: Plant, onBack: () -> Unit) {
                             .fillMaxSize()
                             .padding(16.dp)
                             .clip(RoundedCornerShape(16.dp)),
-                        contentScale = ContentScale.Fit,
-                        onLoading = { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) }
+                        contentScale = ContentScale.Fit
                     )
                 } else {
                     Icon(
-                        imageVector = Icons.Default.Park,
-                        contentDescription = null,
-                        modifier = Modifier.size(80.dp).align(Alignment.Center),
-                        tint = Color.Gray
+                        imageVector = Icons.Default.Park, 
+                        contentDescription = null, 
+                        modifier = Modifier.size(80.dp).align(Alignment.Center), 
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }
             }
 
             Column(
-                modifier = Modifier.padding(20.dp),
+                modifier = Modifier.padding(20.dp), 
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // TÍTULO Y CATEGORÍA
+                // NOMBRES - Color primario dinámico
                 Text(
-                    text = plant.nombreComun,
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF2E7D32)
+                    text = plant.nombreComun.capitalizeFirst(), 
+                    style = MaterialTheme.typography.headlineLarge, 
+                    fontWeight = FontWeight.Bold, 
+                    color = MaterialTheme.colorScheme.primary
                 )
+                if (plant.nombreCientifico.isNotEmpty()) {
+                    Text(
+                        text = plant.nombreCientifico.capitalizeFirst(), 
+                        style = MaterialTheme.typography.bodyLarge, 
+                        fontStyle = FontStyle.Italic, 
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 
+                // CATEGORÍA - Estilo adaptativo
                 Surface(
-                    color = Color(0xFFC8E6C9),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.padding(vertical = 4.dp)
+                    color = MaterialTheme.colorScheme.primaryContainer, 
+                    shape = RoundedCornerShape(8.dp), 
+                    modifier = Modifier.padding(vertical = 8.dp)
                 ) {
-                    val categoryName = when(plant.categoria) {
+                    val cat = when(plant.categoria) {
                         "Hortalizas" -> strings.wikiCategoryVegetables
                         "Frutas" -> strings.wikiCategoryFruits
                         "Hierbas" -> strings.wikiCategoryHerbs
                         else -> plant.categoria
                     }
                     Text(
-                        text = categoryName,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = Color(0xFF1B5E20)
+                        text = cat, 
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp), 
+                        style = MaterialTheme.typography.labelLarge, 
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(Modifier.height(24.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    InfoCard(
-                        modifier = Modifier.weight(1f),
-                        icon = Icons.Default.Timer,
-                        label = strings.detailHarvest,
-                        value = strings.detailHarvestDays.replace("{0}", plant.diasCosecha.toString())
+                // GRID DE INFORMACIÓN TÉCNICA - Limpieza total de blancos
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max), 
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        InfoCard(Modifier.weight(1f).fillMaxHeight(), Icons.Default.CalendarMonth, strings.detailSowing, plant.siembra.capitalizeFirst())
+                        InfoCard(Modifier.weight(1f).fillMaxHeight(), Icons.Default.Agriculture, strings.detailHarvest, plant.recoleccion.capitalizeFirst())
+                    }
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max), 
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        InfoCard(Modifier.weight(1f).fillMaxHeight(), Icons.Default.Thermostat, strings.detailTemperature, plant.temperaturaOptima.capitalizeFirst(), Color(0xFFFF9800))
+                        InfoCard(Modifier.weight(1f).fillMaxHeight(), Icons.Default.Yard, strings.detailFertilizer, plant.abono.capitalizeFirst(), Color(0xFF8BC34A))
+                    }
+
+                    InfoCard(Modifier.fillMaxWidth().height(IntrinsicSize.Max), Icons.Default.WaterDrop, strings.detailWatering, plant.riego.capitalizeFirst(), Color(0xFF2196F3))
+                }
+
+                Spacer(Modifier.height(24.dp))
+
+                // SECCIONES DE TEXTO LARGO - Fondos adaptados
+                DetailSection(strings.detailCare, Icons.Default.VerifiedUser, MaterialTheme.colorScheme.primary) {
+                    Text(
+                        text = plant.cuidados.capitalizeFirst().ifEmpty { strings.detailNotSpecified },
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    InfoCard(
-                        modifier = Modifier.weight(1f),
-                        icon = Icons.Default.WaterDrop,
-                        label = strings.detailWatering,
-                        value = plant.frecuenciaRiego,
-                        iconColor = Color(0xFF2196F3)
+                }
+
+                DetailSection(strings.detailFriends, Icons.Default.ThumbUp, Color(0xFF4CAF50)) {
+                    Text(
+                        text = plant.plantasAmigables.joinToString(", ").capitalizeFirst().ifEmpty { strings.detailNoneKnown },
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-                DetailSection(
-                    title = strings.detailSoil, 
-                    icon = Icons.Default.Landscape, 
-                    color = Color(0xFFA34400)
-                ) {
-                    Text(text = plant.tipoSustrato.ifEmpty { strings.detailNotSpecified })
-                }
-
-                DetailSection(title = strings.detailSeason, icon = Icons.Default.CalendarMonth) {
+                DetailSection(strings.detailEnemies, Icons.Default.ThumbDown, Color(0xFFE53935)) {
                     Text(
-                        text = plant.temporadaSiembra.joinToString(", ")
-                            .ifEmpty { strings.detailNotSpecified })
+                        text = plant.plantasEnemigas.joinToString(", ").capitalizeFirst().ifEmpty { strings.detailNoneKnown },
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
 
-                DetailSection(
-                    title = strings.detailFriends,
-                    icon = Icons.Default.ThumbUp,
-                    color = Color(0xFF4CAF50)
-                ) {
-                    Text(
-                        text = plant.plantasAmigables.joinToString(", ")
-                            .ifEmpty { strings.detailNoneKnown })
-                }
-
-                DetailSection(
-                    title = strings.detailEnemies,
-                    icon = Icons.Default.ThumbDown,
-                    color = Color(0xFFE53935)
-                ) {
-                    Text(
-                        text = plant.plantasEnemigas.joinToString(", ")
-                            .ifEmpty { strings.detailNoneKnown })
-                }
-
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(Modifier.height(32.dp))
             }
         }
     }
 }
 
-
 @Composable
-fun InfoCard(
-    modifier: Modifier,
-    icon: ImageVector,
-    label: String,
-    value: String,
-    iconColor: Color = Color(0xFF2E7D32)
-) {
+fun InfoCard(modifier: Modifier, icon: ImageVector, label: String, value: String, iconColor: Color = Color(0xFF4CAF50)) {
     Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        modifier = modifier, 
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), 
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier.padding(12.dp).fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.padding(12.dp).fillMaxSize(), 
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                tint = iconColor,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.height(4.dp))
+            Icon(icon, null, Modifier.size(24.dp), iconColor)
+            Spacer(Modifier.height(4.dp))
             Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = Color.DarkGray
+                text = label, 
+                style = MaterialTheme.typography.labelLarge, 
+                fontWeight = FontWeight.Bold, 
+                color = MaterialTheme.colorScheme.onSurfaceVariant, 
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
             Text(
-                text = value,
-                style = MaterialTheme.typography.bodyMedium,
+                text = value.ifEmpty { "-" }, 
+                style = MaterialTheme.typography.bodyMedium, 
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
         }
     }
 }
 
-
 @Composable
-fun DetailSection(
-    title: String,
-    icon: ImageVector,
-    color: Color = Color.Gray,
-    content: @Composable () -> Unit
-) {
-    Column(modifier = Modifier.padding(vertical = 12.dp)) {
+fun DetailSection(title: String, icon: ImageVector, color: Color = Color.Gray, content: @Composable () -> Unit) {
+    Column(Modifier.padding(vertical = 12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
-            Spacer(modifier = Modifier.width(8.dp))
+            Icon(icon, null, Modifier.size(20.dp), color)
+            Spacer(Modifier.width(8.dp))
             Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                text = title, 
+                style = MaterialTheme.typography.titleMedium, 
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
             )
         }
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(Modifier.height(4.dp))
         Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFF9F9F9))
+            modifier = Modifier.fillMaxWidth(), 
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
         ) {
-            Box(modifier = Modifier.padding(12.dp)) {
-                content()
-            }
+            Box(Modifier.padding(12.dp)) { content() }
         }
     }
+}
+
+fun String.capitalizeFirst(): String {
+    if (this.isEmpty()) return this
+    return this.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
 }

@@ -33,15 +33,18 @@ class WikiViewModel : ViewModel() {
                     try {
                         Plant(
                             id = doc.id,
-                            nombreComun = doc.get<String>("nombre_comun"),
-                            categoria = doc.get<String>("categoria"),
-                            imagenUrl = try { doc.get<String>("imagen_url") } catch (_: Exception) { null },
-                            diasCosecha = try { doc.get<Int>("dias_cosecha") } catch (_: Exception) { 0 },
-                            frecuenciaRiego = try { doc.get<String>("frecuencia_riego") } catch (_: Exception) { "" },
-                            tipoSustrato = try { doc.get<String>("tipo_sustrato") } catch (_: Exception) { "" },
-                            plantasAmigables = try { doc.get<List<String>>("plantas_amigables") } catch (_: Exception) { emptyList() },
-                            plantasEnemigas = try { doc.get<List<String>>("plantas_enemigas") } catch (_: Exception) { emptyList() },
-                            temporadaSiembra = try { doc.get<List<String>>("temporada_siembra") } catch (_: Exception) { emptyList() }
+                            nombreComun = doc.get<String>("nombre_comun") ?: "",
+                            nombreCientifico = doc.get<String>("nombre_cientifico") ?: "",
+                            categoria = doc.get<String>("categoria") ?: "", 
+                            imagenUrl = doc.get<String>("imagen_url"),
+                            siembra = doc.get<String>("siembra") ?: "",
+                            recoleccion = doc.get<String>("recoleccion") ?: "", // Corregido: sin tilde
+                            temperaturaOptima = doc.get<String>("temperatura_optima") ?: "",
+                            riego = doc.get<String>("riego") ?: "",
+                            abono = doc.get<String>("abono") ?: "",
+                            cuidados = doc.get<String>("cuidados") ?: "",
+                            plantasAmigables = doc.get<List<String>>("plantas_amigables") ?: emptyList(),
+                            plantasEnemigas = doc.get<List<String>>("plantas_enemigas") ?: emptyList()
                         )
                     } catch (e: Exception) {
                         println("ERROR al leer planta con ID ${doc.id}: ${e.message}")
@@ -81,19 +84,4 @@ class WikiViewModel : ViewModel() {
             matchesSearch && matchesCategory
         }
     }
-
-    /* iOS
-    fun setPlants(newList: List<Plant>) {
-        allPlants = newList
-        _uiState.value = newList
-    }
-
-    fun updatePlantImageUrl(id: String, url: String) {
-        val updateFunc: (Plant) -> Plant = { plant ->
-            if (plant.id == id) plant.copy(imagenUrl = url) else plant
-        }
-        allPlants = allPlants.map(updateFunc)
-        _uiState.update { it.map(updateFunc) }
-    }
-    */
 }
