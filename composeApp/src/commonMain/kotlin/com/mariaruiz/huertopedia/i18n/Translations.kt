@@ -12,9 +12,12 @@ interface AppStrings {
     val loginName: String
     val loginEmail: String
     val loginPassword: String
+    val loginShowPassword: String
+    val loginHidePassword: String
     val loginAccept: String
     val changeLanguage: String
     val profileTitle: String
+    val profileAboutMe: String
     val homeWelcome: String 
     val welcomeSubtitle: String
     val logoutButton: String
@@ -74,12 +77,14 @@ interface AppStrings {
     val gardenActivityButton: String
     val gardenSelectionErrorTitle: String
     val gardenSelectionErrorText: String
+    val gardenMultiplePlantersErrorTitle: String
+    val gardenMultiplePlantersErrorText: String
     val gardenOk: String
     val gardenEditNameTitle: String
     val gardenNewNameLabel: String
     val gardenSave: String
 
-    // Theme (NUEVO)
+    // Theme
     val themeTitle: String
     val themeLight: String
     val themeDark: String
@@ -141,9 +146,12 @@ object EnStrings : AppStrings {
     override val loginName = "Full Name"
     override val loginEmail = "Email Address"
     override val loginPassword = "Password"
+    override val loginShowPassword = "Show password"
+    override val loginHidePassword = "Hide password"
     override val loginAccept = "Accept"
     override val changeLanguage = "Language: EN"
     override val profileTitle = "My Profile"
+    override val profileAboutMe = "About me"
     override val homeWelcome = "Hello, {0}!"
     override val welcomeSubtitle = "Your garden is growing today 🌿"
     override val logoutButton = "Logout"
@@ -200,6 +208,8 @@ object EnStrings : AppStrings {
     override val gardenActivityButton = "Activity in {0}"
     override val gardenSelectionErrorTitle = "Invalid selection"
     override val gardenSelectionErrorText = "You cannot select occupied and empty pots at the same time."
+    override val gardenMultiplePlantersErrorTitle = "Different Gardeners"
+    override val gardenMultiplePlantersErrorText = "You cannot select pots from different gardeners at the same time."
     override val gardenOk = "Got it"
     override val gardenEditNameTitle = "Edit name"
     override val gardenNewNameLabel = "New name"
@@ -262,9 +272,12 @@ object EsStrings : AppStrings {
     override val loginName = "Nombre"
     override val loginEmail = "Email"
     override val loginPassword = "Contraseña"
+    override val loginShowPassword = "Mostrar contraseña"
+    override val loginHidePassword = "Ocultar contraseña"
     override val loginAccept = "Aceptar"
     override val changeLanguage = "Idioma: ES"
     override val profileTitle = "Mi Perfil"
+    override val profileAboutMe = "Sobre mí"
     override val homeWelcome = "¡Hola, {0}!"
     override val welcomeSubtitle = "Tu huerto está creciendo hoy 🌿"
     override val logoutButton = "Cerrar sesión"
@@ -321,6 +334,8 @@ object EsStrings : AppStrings {
     override val gardenActivityButton = "Actividad en {0}"
     override val gardenSelectionErrorTitle = "Selección inválida"
     override val gardenSelectionErrorText = "No puedes seleccionar macetas ocupadas y vacías al mismo tiempo."
+    override val gardenMultiplePlantersErrorTitle = "Jardineras diferentes"
+    override val gardenMultiplePlantersErrorText = "No puedes seleccionar macetas de jardineras diferentes al mismo tiempo."
     override val gardenOk = "Entendido"
     override val gardenEditNameTitle = "Editar nombre"
     override val gardenNewNameLabel = "Nuevo nombre"
@@ -371,7 +386,6 @@ object EsStrings : AppStrings {
     override val errorUnknown = "Ha ocurrido un error inesperado."
     override val errorFieldsEmpty = "Rellena todos los campos para continuar."
     override val errorNameEmpty = "El nombre no puede estar vacío."
-
 }
 
 val LocalStrings = staticCompositionLocalOf<AppStrings> { EsStrings }

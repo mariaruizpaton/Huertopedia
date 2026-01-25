@@ -37,7 +37,6 @@ import kotlinx.coroutines.launch
 import dev.icerock.moko.permissions.Permission
 import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
-// ------------------------------------
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,7 +56,6 @@ fun UserScreen(
     var tempDesc by remember { mutableStateOf(viewModel.descripcion) }
     var tempImageBytes by remember { mutableStateOf<ByteArray?>(null) }
 
-    // 1. CONFIGURACIÓN DE PERMISOS
     val factory = rememberPermissionsControllerFactory()
     val controller = remember(factory) { factory.createPermissionsController() }
     BindEffect(controller)
@@ -112,45 +110,26 @@ fun UserScreen(
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
-            // FOTO DE PERFIL
             Box(contentAlignment = Alignment.BottomEnd) {
                 Surface(
                     modifier = Modifier
                         .size(120.dp)
                         .clip(CircleShape)
                         .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                        // 2. MODIFICAMOS EL CLICKABLE CON PERMISOS
                         .clickable(enabled = isEditing) {
                             scope.launch {
                                 try {
-                                    // 1. Intentamos ser educados y pedir permiso (necesario en iOS y Android viejos)
                                     controller.providePermission(Permission.GALLERY)
-
-                                    // 2. Si dicen que sí, abrimos
                                     imagePicker.launch()
-
                                 } catch (e: DeniedAlwaysException) {
-                                    // 3. CASO FALSO NEGATIVO (Android 13/14)
-                                    // El sistema dice "No te doy permiso general", pero nos deja usar el picker.
-                                    println("Permiso denegado permanentemente. Intentando abrir galería de todas formas (Lógica Android 14)...")
-
                                     try {
-                                        // Intentamos abrir sin permiso
                                         imagePicker.launch()
-                                    } catch (e: Exception) {
-                                        // Si falla aquí, es que DE VERDAD no nos dejan. Abrimos ajustes.
-                                        println("Fallo total. Abriendo ajustes.")
+                                    } catch (ex: Exception) {
                                         controller.openAppSettings()
                                     }
-
                                 } catch (e: DeniedException) {
-                                    // 4. El usuario dijo explícitamente "NO" en el popup ahora mismo.
-                                    // Aquí respetamos su decisión y no hacemos nada.
-                                    println("El usuario ha rechazado el permiso puntualmente.")
-
+                                    println("Permiso denegado")
                                 } catch (e: Exception) {
-                                    // 5. Cualquier otro error raro, intentamos abrir por si acaso.
-                                    e.printStackTrace()
                                     imagePicker.launch()
                                 }
                             }
@@ -160,9 +139,8 @@ fun UserScreen(
                     val imageResource: Resource<Painter> = when {
                         tempImageBytes != null -> asyncPainterResource(data = tempImageBytes!!)
                         !viewModel.imagenUrlRenderizable.isNullOrEmpty() -> asyncPainterResource(data = viewModel.imagenUrlRenderizable!!)
-                        else -> asyncPainterResource(data = Unit) // Placeholder or error
+                        else -> asyncPainterResource(data = Unit)
                     }
-
 
                     if (tempImageBytes != null || !viewModel.imagenUrlRenderizable.isNullOrEmpty()) {
                         KamelImage(
@@ -182,7 +160,6 @@ fun UserScreen(
                     }
                 }
 
-                // Icono de la cámara pequeño (visual)
                 if (isEditing) {
                     Surface(
                         modifier = Modifier.size(32.dp).clip(CircleShape),
@@ -192,8 +169,6 @@ fun UserScreen(
                     }
                 }
             }
-
-            // ... resto del código igual (text fields, botones, etc) ...
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -209,7 +184,7 @@ fun UserScreen(
                 OutlinedTextField(
                     value = tempDesc,
                     onValueChange = { tempDesc = it },
-                    label = { Text(strings.cropLogObservations) },
+                    label = { Text(strings.profileAboutMe) },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3
                 )
@@ -222,12 +197,9 @@ fun UserScreen(
                     Button(
                         onClick = {
                             if (tempImageBytes != null) {
-                                viewModel.uploadImageBytes(tempImageBytes!!) {
-                                    viewModel.updateUserData(tempNombre, tempDesc, viewModel.imagenUrl)
-                                }
-                            } else {
-                                viewModel.updateUserData(tempNombre, tempDesc, viewModel.imagenUrl)
+                                viewModel.uploadImageBytes(tempImageBytes!!)
                             }
+                            viewModel.updateUserData(tempNombre, tempDesc, viewModel.imagenUrl)
                             isEditing = false
                         },
                         modifier = Modifier.weight(1f)
@@ -236,9 +208,6 @@ fun UserScreen(
                     }
                 }
             } else {
-                // ... (Bloque de visualización que ya tenías) ...
-
-                // TARJETA DE INFORMACIÓN CENTRADA
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
@@ -270,7 +239,6 @@ fun UserScreen(
 
                 HorizontalDivider(Modifier.padding(bottom = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
 
-                // AJUSTES
                 Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
                     Text(strings.changeLanguage, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onBackground)
                     LanguageButton(languageRepository)

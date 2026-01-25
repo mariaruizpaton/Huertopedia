@@ -19,7 +19,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 1. Configuración de Google Sign-In
         val webClientId = "21402074340-r9cne0sdceh44qjsotpjtj3achl5f05m.apps.googleusercontent.com"
 
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -56,7 +55,6 @@ class MainActivity : ComponentActivity() {
 
             App(
                 onGoogleLogin = { callbackDeVuelta ->
-                    Log.d("DEBUG_APP", "Lanzando ventana de Google...")
                     onLoginResultCallback = callbackDeVuelta
                     launcher.launch(googleSignInClient.signInIntent)
                 },
@@ -65,49 +63,40 @@ class MainActivity : ComponentActivity() {
                         val user = firebaseAuth.currentUser
                         viewModel.setLoggedIn(user != null)
                         if (user != null) {
-                            // --- CAMBIO CLAVE: Guardar el ID para evitar el error de segmentos ---
                             viewModel.userId = user.uid
 
                             val userDocRef = db.collection("usuario").document(user.uid)
                             userDocRef.get().addOnSuccessListener { document ->
                                 if (document.exists()) {
                                     viewModel.name = document.getString("nombre")
-                                    Log.d("AuthState", "Usuario encontrado: ${viewModel.name}")
-                                    // --- NUEVO: Cargar descripción e imagen para que salgan en el perfil ---
                                     viewModel.descripcion = document.getString("descripcion") ?: ""
                                     viewModel.imagenUrl = document.getString("imagen_url") ?: ""
-
-                                    Log.d("AuthState", "Datos cargados: ${viewModel.name}, ${viewModel.descripcion}")
                                 } else {
                                     val nameFromAuth = user.displayName
                                     viewModel.name = nameFromAuth
-                                    viewModel.descripcion = ""
-                                    viewModel.imagenUrl = ""
-
+                                    
                                     val userData = hashMapOf(
+                                        "id" to user.uid, 
                                         "nombre" to nameFromAuth,
                                         "email" to user.email,
                                         "descripcion" to "",
-                                        "imagen_url" to ""
+                                        "imagen_url" to "",
+                                        "preferences" to hashMapOf(
+                                            "language" to "es",
+                                            "theme" to "system"
+                                        )
                                     )
                                     userDocRef.set(userData)
                                 }
-                            }.addOnFailureListener {
-                                viewModel.name = user.displayName
                             }
                         } else {
-                            viewModel.userId = "" // Limpiar ID al cerrar sesión
+                            viewModel.userId = ""
                             viewModel.name = null
-                            Log.d("AuthState", "Usuario ha cerrado sesión.")
                         }
                     }
                     setupLoginLogic(viewModel, auth, db, googleSignInClient)
                 },
-
-                // Pasamos una función vacía. El WikiViewModel ya carga los datos solo.
-                onSetupWikiViewModel = {
-                    // No hacer nada aquí. El ViewModel ya tiene un init { fetchPlants() }
-                }
+                onSetupWikiViewModel = {}
             )
         }
     }
@@ -118,15 +107,19 @@ class MainActivity : ComponentActivity() {
                 if (task.isSuccessful) {
                     val uid = auth.currentUser?.uid
                     if (uid != null) {
-                        // Inicializamos el documento con todos los campos
                         val userData = hashMapOf(
+                            "id" to uid,
                             "nombre" to nombre,
                             "email" to email,
                             "descripcion" to "",
-                            "imagen_url" to ""
+                            "imagen_url" to "",
+                            "preferences" to hashMapOf(
+                                "language" to "es",
+                                "theme" to "system"
+                            )
                         )
                         db.collection("usuario").document(uid).set(userData)
-                        viewModel.userId = uid // IMPORTANTE
+                        viewModel.userId = uid
                     }
                     onResult(true, null)
                 } else {

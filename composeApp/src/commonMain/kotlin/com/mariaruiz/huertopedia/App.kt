@@ -18,6 +18,8 @@ import com.mariaruiz.huertopedia.repositories.LanguageRepository
 import com.mariaruiz.huertopedia.repositories.ThemeRepository
 import com.mariaruiz.huertopedia.theme.DarkGardenColors
 import com.mariaruiz.huertopedia.theme.LightGardenColors
+import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.firestore.firestore
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 enum class Screen {
@@ -61,8 +63,31 @@ fun App(
             val isLoggedIn by viewModel.isLoggedIn.collectAsState()
             val currentScreen = remember { mutableStateOf(Screen.Login) }
 
-            LaunchedEffect(isLoggedIn) {
+            // Sincronización de preferencias al iniciar sesión
+            LaunchedEffect(isLoggedIn, viewModel.userId) {
                 currentScreen.value = if (isLoggedIn) Screen.Home else Screen.Login
+                
+                if (isLoggedIn && viewModel.userId.isNotEmpty()) {
+                    try {
+                        val db = Firebase.firestore
+                        val doc = db.collection("usuario").document(viewModel.userId).get()
+                        if (doc.exists) {
+                            val prefs = doc.get<Map<String, String>>("preferences")
+                            prefs?.let {
+                                val lang = it["language"]
+                                val theme = it["theme"]
+                                if (lang != null && lang != currentLangCode) {
+                                    languageRepository.setLanguage(lang)
+                                }
+                                if (theme != null && theme != themePref) {
+                                    themeRepository.setTheme(theme)
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        println("Error al sincronizar preferencias: ${e.message}")
+                    }
+                }
             }
 
             LaunchedEffect(Unit) {
@@ -89,7 +114,7 @@ fun App(
                             onBack = { currentScreen.value = Screen.Home },
                             viewModel = viewModel,
                             languageRepository = languageRepository,
-                            themeRepository = themeRepository // Pasamos el repo para el Switch
+                            themeRepository = themeRepository
                         )
                     }
                     Screen.Home -> {

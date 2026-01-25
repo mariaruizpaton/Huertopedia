@@ -57,7 +57,10 @@ fun GardenScreen(
 
     // Selección múltiple
     var selectedPots by remember { mutableStateOf(emptyMap<Triple<String, Int, Int>, Boolean>()) }
+    
+    // Estados de Error
     var showSelectionError by remember { mutableStateOf(false) }
+    var showMultiplePlantersError by remember { mutableStateOf(false) }
 
     var showPlantDialog by remember { mutableStateOf(false) }
     var tipoAccionSeleccionada by remember { mutableStateOf("Plantar") }
@@ -92,7 +95,6 @@ fun GardenScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Botón Actividad (Ahora al lado del botón +)
                 if (selectedPots.isNotEmpty()) {
                     ExtendedFloatingActionButton(
                         onClick = { showPlantDialog = true },
@@ -103,7 +105,6 @@ fun GardenScreen(
                     )
                 }
                 
-                // Botón Añadir Jardinera (Siempre visible)
                 FloatingActionButton(
                     onClick = { showCreateDialog = true },
                     containerColor = MaterialTheme.colorScheme.primary,
@@ -115,7 +116,44 @@ fun GardenScreen(
         }
     ) { padding ->
 
-        // --- DIÁLOGOS (Edit, Error, Create, Plant, Delete) ---
+        // --- DIÁLOGO: DIFERENTES JARDINERAS (PRIORITARIO) ---
+        if (showMultiplePlantersError) {
+            AlertDialog(
+                onDismissRequest = { 
+                    showMultiplePlantersError = false 
+                    selectedPots = emptyMap()
+                },
+                icon = { Icon(Icons.Default.Info, null, tint = Color(0xFFFF9800)) },
+                title = { Text(strings.gardenMultiplePlantersErrorTitle) },
+                text = { Text(text = strings.gardenMultiplePlantersErrorText, fontSize = 18.sp) },
+                confirmButton = {
+                    TextButton(onClick = { 
+                        showMultiplePlantersError = false 
+                        selectedPots = emptyMap()
+                    }) { Text(strings.gardenOk) }
+                }
+            )
+        }
+
+        // --- DIÁLOGO: ERROR DE SELECCIÓN (OCUPADA/VACÍA) ---
+        if (showSelectionError) {
+            AlertDialog(
+                onDismissRequest = {
+                    showSelectionError = false
+                    selectedPots = emptyMap()
+                },
+                icon = { Icon(Icons.Default.Info, null) },
+                title = { Text(strings.gardenSelectionErrorTitle) },
+                text = { Text(text = strings.gardenSelectionErrorText, fontSize = 18.sp) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showSelectionError = false
+                        selectedPots = emptyMap()
+                    }) { Text(strings.gardenOk) }
+                }
+            )
+        }
+
         if (showEditDialog && planterToEdit != null) {
             AlertDialog(
                 onDismissRequest = { showEditDialog = false },
@@ -139,18 +177,6 @@ fun GardenScreen(
                 },
                 dismissButton = {
                     TextButton(onClick = { showEditDialog = false }) { Text(strings.gardenCancel) }
-                }
-            )
-        }
-
-        if (showSelectionError) {
-            AlertDialog(
-                onDismissRequest = { showSelectionError = false },
-                icon = { Icon(Icons.Default.Info, null) },
-                title = { Text(strings.gardenSelectionErrorTitle) },
-                text = { Text(text = strings.gardenSelectionErrorText, fontSize = 18.sp) },
-                confirmButton = {
-                    TextButton(onClick = { showSelectionError = false }) { Text(strings.gardenOk) }
                 }
             )
         }
@@ -305,15 +331,18 @@ fun GardenScreen(
                                 selectedPots = selectedPots - triple
                             } else {
                                 if (selectedPots.isNotEmpty()) {
+                                    val firstSelectedId = selectedPots.keys.first().first
+                                    if (firstSelectedId != planter.id) {
+                                        showMultiplePlantersError = true
+                                        return@PlanterCard
+                                    }
                                     val currentModeIsOccupied = selectedPots.values.first()
                                     if (currentModeIsOccupied != isOccupied) {
                                         showSelectionError = true
-                                    } else {
-                                        selectedPots = selectedPots + (triple to isOccupied)
+                                        return@PlanterCard
                                     }
-                                } else {
-                                    selectedPots = selectedPots + (triple to isOccupied)
                                 }
+                                selectedPots = selectedPots + (triple to isOccupied)
                             }
                         },
                         onLogClick = { onNavigateToLog(planter) }

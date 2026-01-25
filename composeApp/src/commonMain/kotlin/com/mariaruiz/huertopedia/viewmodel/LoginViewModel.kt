@@ -52,13 +52,11 @@ class LoginViewModel : ViewModel() {
     fun onAceptarClick() {
         errorMessage = null
         
-        // Validación de Nombre (solo en registro)
         if (isRegisterMode && (name == null || name?.isBlank() == true)) {
             errorMessage = "error_name_empty"
             return
         }
         
-        // Validación de Email y Contraseña
         if (email.isBlank() || password.isBlank()) {
             errorMessage = "error_fields_empty"
             return
@@ -67,7 +65,7 @@ class LoginViewModel : ViewModel() {
         if (isRegisterMode) {
             onRegisterRequested?.invoke(email, password, name) { success, result ->
                 if (success) {
-                    this.userId = result ?: ""
+                    // El ID se guardará mediante el AuthStateListener en MainActivity
                     setLoggedIn(true)
                 } else {
                     errorMessage = translateFirebaseError(result ?: "")
@@ -76,7 +74,7 @@ class LoginViewModel : ViewModel() {
         } else {
             onLoginRequested?.invoke(email, password) { success, result ->
                 if (success) {
-                    this.userId = result ?: ""
+                    // CAMBIO IMPORTANTE: No tocamos userId aquí para no sobreescribirlo con ""
                     setLoggedIn(true)
                 } else {
                     errorMessage = translateFirebaseError(result ?: "")
@@ -88,41 +86,13 @@ class LoginViewModel : ViewModel() {
     private fun translateFirebaseError(firebaseMessage: String): String {
         val message = firebaseMessage.lowercase()
         return when {
-            // Credenciales incorrectas
-            message.contains("credential") ||
-                    message.contains("password") ||
-                    message.contains("auth") ||
-                    message.contains("incorrect") -> "error_invalid_credentials"
-
-            // Usuario no encontrado
-            message.contains("user-not-found") ||
-                    message.contains("no user") -> "error_user_not_found"
-
-            // EMAIL YA EXISTE
-            message.contains("email") && (
-                    message.contains("already") ||
-                            message.contains("exists") ||
-                            message.contains("use") ||
-                            message.contains("registrado")
-                    ) -> "error_email_already_in_use"
-
-            // Contraseña débil
-            message.contains("weak-password") ||
-                    message.contains("short") -> "error_weak_password"
-
-            // Email mal formado
-            message.contains("invalid-email") ||
-                    message.contains("malformed") -> "error_invalid_email"
-
-            // Red
-            message.contains("network") ||
-                    message.contains("timeout") ||
-                    message.contains("connection") -> "error_network"
-
-            else -> {
-                println("DEBUG_FIREBASE_ERROR: $firebaseMessage")
-                "error_unknown"
-            }
+            message.contains("credential") || message.contains("password") || message.contains("auth") || message.contains("incorrect") -> "error_invalid_credentials"
+            message.contains("user-not-found") || message.contains("no user") -> "error_user_not_found"
+            message.contains("email") && (message.contains("already") || message.contains("exists") || message.contains("use") || message.contains("registrado")) -> "error_email_already_in_use"
+            message.contains("weak-password") || message.contains("short") -> "error_weak_password"
+            message.contains("invalid-email") || message.contains("malformed") -> "error_invalid_email"
+            message.contains("network") || message.contains("timeout") || message.contains("connection") -> "error_network"
+            else -> "error_unknown"
         }
     }
 
@@ -142,9 +112,8 @@ class LoginViewModel : ViewModel() {
     var imagenUrl by mutableStateOf("")
     var userId by mutableStateOf("")
 
-    fun uploadImageBytes(bytes: ByteArray, function: () -> Unit) {
+    fun uploadImageBytes(bytes: ByteArray) {
         if (userId.isBlank()) return
-
         viewModelScope.launch {
             try {
                 val pathRelativa = "icons/$userId.jpg"
@@ -152,7 +121,6 @@ class LoginViewModel : ViewModel() {
                 val dataToUpload = bytes.toFirebaseData()
                 storageRef.putData(dataToUpload)
                 updateUserData(name ?: "", descripcion, pathRelativa)
-
             } catch (e: Exception) {
                 errorMessage = "error_unknown"
             }
@@ -161,18 +129,11 @@ class LoginViewModel : ViewModel() {
 
     fun updateUserData(newName: String, newDesc: String, newImageUrl: String) {
         if (userId.isBlank()) return
-
         viewModelScope.launch {
             try {
                 val db = Firebase.firestore
                 val userDocument = db.collection("usuario").document(userId)
-
-                userDocument.update(
-                    "nombre" to newName,
-                    "descripcion" to newDesc,
-                    "imagen_url" to newImageUrl
-                )
-
+                userDocument.update("nombre" to newName, "descripcion" to newDesc, "imagen_url" to newImageUrl)
                 name = newName
                 descripcion = newDesc
                 imagenUrl = newImageUrl
@@ -190,7 +151,6 @@ class LoginViewModel : ViewModel() {
             imagenUrlRenderizable = null
             return
         }
-
         viewModelScope.launch {
             try {
                 val downloadUrl = Firebase.storage.reference.child(path).getDownloadUrl()
