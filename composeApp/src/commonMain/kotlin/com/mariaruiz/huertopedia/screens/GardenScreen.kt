@@ -1,6 +1,8 @@
 package com.mariaruiz.huertopedia.screens
 
 import androidx.compose.animation.core.*
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -71,6 +73,7 @@ fun GardenScreen(
     // Estados de Error
     var showSelectionError by remember { mutableStateOf(false) }
     var showMultiplePlantersError by remember { mutableStateOf(false) }
+
 
     // Conflicto de Enemigas
     var showConflictDialog by remember { mutableStateOf(false) }
@@ -147,9 +150,11 @@ fun GardenScreen(
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer
                     )
                 }
-                FloatingActionButton(onClick = { showCreateDialog = true }) {
-                    Icon(Icons.Default.Add, contentDescription = strings.gardenAddPlanter)
-                }
+                FloatingActionButton(
+                    onClick = { showCreateDialog = true },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) { Icon(Icons.Default.Add, contentDescription = strings.gardenAddPlanter) }
             }
         }
     ) { padding ->
@@ -221,6 +226,7 @@ fun GardenScreen(
                             val positions = selectedPots.keys.map { it.second to it.third }
                             gardenViewModel.manageFlowerpots(planterId, positions, null, tipoAccionSeleccionada)
 
+                            // ACTIVAR ANIMACIÓN SI ES RECOLECTAR
                             if (tipoAccionSeleccionada == "Recolectar") {
                                 showHarvestAnimation = true
                             }
@@ -240,53 +246,62 @@ fun GardenScreen(
                 onDismissRequest = { showConflictDialog = false },
                 icon = { Icon(Icons.Default.Warning, null, tint = Color(0xFFFF9800)) },
                 title = { Text(text = strings.gardenConflictTitle, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
-                text = { Text(text = conflictMessage, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
-                confirmButton = {
-                    Row(Modifier.fillMaxWidth(), Arrangement.Center) {
-                        TextButton(onClick = { showConflictDialog = false }) { Text(strings.gardenNo) }
-                        Spacer(Modifier.width(16.dp))
-                        Button(onClick = {
-                            val planterId = selectedPots.keys.first().first
-                            val positions = selectedPots.keys.map { it.second to it.third }
-                            gardenViewModel.manageFlowerpots(planterId, positions, selectedPlantForPot, tipoAccionSeleccionada)
-                            showConflictDialog = false
-                            showPlantDialog = false
-                            selectedPots = emptyMap()
-                        }) { Text(strings.gardenYes) }
+                text = {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                        Text(text = conflictMessage, textAlign = TextAlign.Center)
+                        Spacer(Modifier.height(24.dp))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                            TextButton(onClick = { showConflictDialog = false }) { Text(strings.gardenNo) }
+                            Spacer(Modifier.width(16.dp))
+                            Button(onClick = {
+                                val planterId = selectedPots.keys.first().first
+                                val positions = selectedPots.keys.map { it.second to it.third }
+                                gardenViewModel.manageFlowerpots(planterId, positions, selectedPlantForPot, tipoAccionSeleccionada)
+                                showConflictDialog = false
+                                showPlantDialog = false
+                                selectedPots = emptyMap()
+                            }) { Text(strings.gardenYes) }
+                        }
                     }
-                }
+                },
+                confirmButton = {}
             )
         }
 
         // Errores de selección
         if (showMultiplePlantersError) {
-            Dialog(onDismissRequest = { showMultiplePlantersError = false; selectedPots = emptyMap() }) {
-                Card(shape = RoundedCornerShape(16.dp), modifier = Modifier.padding(16.dp)) {
-                    Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(strings.gardenMultiplePlantersErrorTitle, fontWeight = FontWeight.Bold)
-                        Text(strings.gardenMultiplePlantersErrorText)
+            AlertDialog(
+                onDismissRequest = { showMultiplePlantersError = false; selectedPots = emptyMap() },
+                icon = { Icon(imageVector = Icons.Default.Info, contentDescription = null, tint = Color(0xFFFF9800)) },
+                title = { Text(text = strings.gardenMultiplePlantersErrorTitle, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
+                text = { Text(text = strings.gardenMultiplePlantersErrorText, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
+                confirmButton = {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         TextButton(onClick = { showMultiplePlantersError = false; selectedPots = emptyMap() }) { Text(strings.gardenOk) }
                     }
                 }
-            }
+            )
         }
 
         if (showSelectionError) {
-            Dialog(onDismissRequest = { showSelectionError = false; selectedPots = emptyMap() }) {
-                Card(shape = RoundedCornerShape(16.dp), modifier = Modifier.padding(16.dp)) {
-                    Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(strings.gardenSelectionErrorTitle, fontWeight = FontWeight.Bold)
-                        Text(strings.gardenSelectionErrorText)
+            AlertDialog(
+                onDismissRequest = { showSelectionError = false; selectedPots = emptyMap() },
+                icon = { Icon(Icons.Default.Info, null) },
+                title = { Text(text = strings.gardenSelectionErrorTitle, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
+                text = { Text(text = strings.gardenSelectionErrorText, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
+                confirmButton = {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         TextButton(onClick = { showSelectionError = false; selectedPots = emptyMap() }) { Text(strings.gardenOk) }
                     }
                 }
-            }
+            )
         }
 
         // Diálogo de Actividad (Plantar/Sembrar/Recolectar)
         if (showPlantDialog) {
             val planterId = selectedPots.keys.first().first
             val currentOccupiedPots by gardenViewModel.getFlowerpots(planterId).collectAsState(initial = emptyList())
+            // ... (Resto del diálogo PlantDialog igual, solo cambia el confirmButton arriba en confirmRemoval) ...
             AlertDialog(
                 onDismissRequest = { showPlantDialog = false },
                 title = { Text(strings.gardenManagePots) },
@@ -349,11 +364,7 @@ fun GardenScreen(
                                 }
                                 if (selectedPlantForPot != null) {
                                     val conflict = checkConflicts(planterId, selectedPlantForPot!!, positions, currentOccupiedPots)
-                                    if (conflict != null) {
-                                        conflictMessage = conflict
-                                        showConflictDialog = true
-                                        return@Button
-                                    }
+                                    if (conflict != null) { conflictMessage = conflict; showConflictDialog = true; return@Button }
                                 }
                                 gardenViewModel.manageFlowerpots(planterId, positions, selectedPlantForPot, tipoAccionSeleccionada)
                                 showPlantDialog = false
@@ -373,8 +384,10 @@ fun GardenScreen(
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         OutlinedTextField(value = nombrePlanter, onValueChange = { nombrePlanter = it }, label = { Text(strings.gardenPlanterNamePlaceholder) }, modifier = Modifier.fillMaxWidth())
-                        NumberSelector(strings.gardenRows, numFilas, { numFilas = it }, GardenConfig.MIN_ROWS..GardenConfig.MAX_ROWS)
-                        NumberSelector(strings.gardenCols, numColumnas, { numColumnas = it }, GardenConfig.MIN_COLS..GardenConfig.MAX_COLS)
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                            NumberSelector(strings.gardenRows, numFilas, { numFilas = it }, 1..5)
+                            NumberSelector(strings.gardenCols, numColumnas, { numColumnas = it }, 1..5)
+                        }
                     }
                 },
                 confirmButton = {
@@ -417,6 +430,37 @@ fun GardenScreen(
                     }
                 }
             )
+        }
+
+        if (myPlanters.isEmpty()) {
+            Box(Modifier.fillMaxSize().padding(padding), Alignment.Center) { Text(strings.gardenNoPlanters) }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().padding(padding),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 100.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(myPlanters) { planter ->
+                    PlanterCard(
+                        planter = planter, gardenViewModel = gardenViewModel, selectedPots = selectedPots.keys,
+                        onDelete = { planterToDelete = planter; showDeleteConfirm = true },
+                        onEditName = { planterToEdit = planter; nuevoNombrePlanter = planter.nombre; showEditDialog = true },
+                        onPotClick = { f, c, isOccupied ->
+                            val triple = Triple(planter.id, f, c)
+                            if (selectedPots.containsKey(triple)) { selectedPots = selectedPots - triple }
+                            else {
+                                if (selectedPots.isNotEmpty()) {
+                                    val firstId = selectedPots.keys.first().first
+                                    if (firstId != planter.id) { showMultiplePlantersError = true; return@PlanterCard }
+                                    if (selectedPots.values.first() != isOccupied) { showSelectionError = true; return@PlanterCard }
+                                }
+                                selectedPots = selectedPots + (triple to isOccupied)
+                            }
+                        },
+                        onLogClick = { onNavigateToLog(planter) }
+                    )
+                }
+            }
         }
     }
 }
@@ -476,18 +520,12 @@ fun PlanterCard(
             Spacer(Modifier.height(12.dp))
 
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Column(
-                    modifier = Modifier.widthIn(max = 400.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                Column(modifier = Modifier.widthIn(max = 400.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     for (f in 0 until planter.filas) {
-                        Row(
-                            modifier = if (planter.columnas > 2) Modifier.fillMaxWidth() else Modifier.wrapContentWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
-                        ) {
+                        Row(modifier = if (planter.columnas > 2) Modifier.fillMaxWidth() else Modifier.wrapContentWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)) {
                             for (c in 0 until planter.columnas) {
                                 val pot = occupiedPots.find { it.fila == f && it.columna == c }
-                                val itemModifier = if (planter.columnas > 2) Modifier.weight(1f) else Modifier.size(100.dp)
+                                val itemModifier = if (planter.columnas > 2) Modifier.weight(1f) else Modifier.size(80.dp)
                                 FlowerpotView(pot, selectedPots.contains(Triple(planter.id, f, c)), itemModifier) { onPotClick(f, c, pot != null) }
                             }
                         }
@@ -496,14 +534,13 @@ fun PlanterCard(
             }
             Spacer(Modifier.height(16.dp))
             OutlinedButton(onClick = onLogClick, modifier = Modifier.fillMaxWidth()) {
-                Icon(Icons.AutoMirrored.Filled.NoteAdd, null)
-                Spacer(Modifier.width(8.dp))
-                Text(strings.gardenCropLog)
+                Icon(Icons.AutoMirrored.Filled.NoteAdd, null); Spacer(Modifier.width(8.dp)); Text(strings.gardenCropLog)
             }
         }
     }
 }
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun FlowerpotView(pot: GardenFlowerpot?, isSelected: Boolean, modifier: Modifier, onClick: () -> Unit) {
     val bgColor = when {
@@ -512,18 +549,37 @@ fun FlowerpotView(pot: GardenFlowerpot?, isSelected: Boolean, modifier: Modifier
         pot.tipoAccion == "Sembrar" -> Color(0xFFE1BEE7)
         else -> Color(0xFFC8E6C9)
     }
-    Box(modifier.aspectRatio(1f).background(bgColor, RoundedCornerShape(8.dp)).border(1.dp, if(isSelected) Color(0xFFFBC02D) else MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp)).clickable { onClick() }, Alignment.Center) {
-        if (pot == null) Icon(if(isSelected) Icons.Default.Check else Icons.Default.Add, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        else {
-            if (!pot.imagenUrl.isNullOrBlank()) KamelImage(asyncPainterResource(pot.imagenUrl!!), null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize().padding(4.dp).clip(RoundedCornerShape(4.dp)))
-            else Text(pot.nombrePlanta?.take(8) ?: "?", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+
+    Box(
+        modifier = modifier.aspectRatio(1f).background(bgColor, RoundedCornerShape(8.dp)).border(1.dp, if(isSelected) Color(0xFFFBC02D) else MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp)).clickable { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        AnimatedContent(
+            targetState = pot,
+            transitionSpec = {
+                if (targetState == null) {
+                    fadeIn(tween(500)) togetherWith (scaleOut(tween(500), targetScale = 2.5f) + fadeOut(tween(500)) + slideOutVertically { -it * 2 })
+                } else {
+                    (scaleIn(spring(dampingRatio = Spring.DampingRatioHighBouncy, stiffness = Spring.StiffnessLow), initialScale = 0.1f) + fadeIn()) togetherWith fadeOut(tween(200))
+                }
+            }
+        ) { targetPot ->
+            if (targetPot == null) {
+                Icon(if(isSelected) Icons.Default.Check else Icons.Default.Add, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                if (!targetPot.imagenUrl.isNullOrBlank()) {
+                    KamelImage(asyncPainterResource(targetPot.imagenUrl!!), null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize().padding(4.dp).clip(RoundedCornerShape(4.dp)))
+                } else {
+                    Text(targetPot.nombrePlanta?.take(8) ?: "?", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                }
+            }
         }
     }
 }
 
 @Composable
 fun NumberSelector(label: String, value: Int, onValueChange: (Int) -> Unit, range: IntRange) {
-    Column {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(label, style = MaterialTheme.typography.labelSmall)
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { if (value > range.first) onValueChange(value - 1) }, enabled = value > range.first) { Icon(Icons.Default.Remove, null) }
@@ -552,6 +608,7 @@ fun HarvestAnimationOverlay() {
         }
 
         particles.forEach { particle ->
+            // Ahora podemos llamar a esto porque estamos dentro de un Box (BoxWithConstraints hereda de BoxScope)
             LeafParticle(particle, containerWidth, containerHeight)
         }
     }
