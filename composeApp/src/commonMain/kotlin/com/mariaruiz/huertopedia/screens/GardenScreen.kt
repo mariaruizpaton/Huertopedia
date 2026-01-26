@@ -34,6 +34,8 @@ import com.mariaruiz.huertopedia.utils.BackHandler
 import com.mariaruiz.huertopedia.viewmodel.GardenViewModel
 import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
 import com.mariaruiz.huertopedia.i18n.LocalStrings
+// Importamos nuestro helper de compartir multiplataforma
+import com.mariaruiz.huertopedia.utils.rememberShareHandler
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import kotlinx.coroutines.delay
@@ -85,7 +87,7 @@ fun GardenScreen(
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var planterToDelete by remember { mutableStateOf<Planter?>(null) }
 
-    // --- NUEVO ESTADO PARA LA ANIMACIÓN ---
+    // Estado para la animación
     var showHarvestAnimation by remember { mutableStateOf(false) }
 
     val isHarvestMode = selectedPots.values.any { it }
@@ -97,7 +99,7 @@ fun GardenScreen(
     // Efecto para detener la animación automáticamente
     if (showHarvestAnimation) {
         LaunchedEffect(Unit) {
-            delay(2000) // La animación dura 2 segundos
+            delay(2000)
             showHarvestAnimation = false
         }
     }
@@ -152,7 +154,7 @@ fun GardenScreen(
         }
     ) { padding ->
 
-        // Usamos un Box para superponer la animación sobre la lista
+        // Box principal para capas superpuestas (animación)
         Box(modifier = Modifier.fillMaxSize()) {
 
             // --- CONTENIDO PRINCIPAL ---
@@ -166,7 +168,9 @@ fun GardenScreen(
                 ) {
                     items(myPlanters) { planter ->
                         PlanterCard(
-                            planter = planter, gardenViewModel = gardenViewModel, selectedPots = selectedPots.keys,
+                            planter = planter,
+                            gardenViewModel = gardenViewModel,
+                            selectedPots = selectedPots.keys,
                             onDelete = { planterToDelete = planter; showDeleteConfirm = true },
                             onEditName = { planterToEdit = planter; nuevoNombrePlanter = planter.nombre; showEditDialog = true },
                             onPotClick = { f, c, isOccupied ->
@@ -195,7 +199,7 @@ fun GardenScreen(
 
         // --- DIÁLOGOS ---
 
-        // --- DIÁLOGO: CONFIRMACIÓN DE ELIMINACIÓN ---
+        // Confirmación de eliminación (Cosecha/Arrancar)
         if (showConfirmRemovalDialog) {
             AlertDialog(
                 onDismissRequest = { showConfirmRemovalDialog = false },
@@ -217,7 +221,6 @@ fun GardenScreen(
                             val positions = selectedPots.keys.map { it.second to it.third }
                             gardenViewModel.manageFlowerpots(planterId, positions, null, tipoAccionSeleccionada)
 
-                            // ACTIVAR ANIMACIÓN SI ES RECOLECTAR
                             if (tipoAccionSeleccionada == "Recolectar") {
                                 showHarvestAnimation = true
                             }
@@ -231,7 +234,7 @@ fun GardenScreen(
             )
         }
 
-        // --- DIÁLOGO: CONFLICTO ENEMIGAS ---
+        // Conflicto plantas enemigas
         if (showConflictDialog) {
             AlertDialog(
                 onDismissRequest = { showConflictDialog = false },
@@ -255,7 +258,7 @@ fun GardenScreen(
             )
         }
 
-        // --- DIÁLOGOS DE ERROR Y CREACIÓN (Sin cambios funcionales, solo mantenidos) ---
+        // Errores de selección
         if (showMultiplePlantersError) {
             Dialog(onDismissRequest = { showMultiplePlantersError = false; selectedPots = emptyMap() }) {
                 Card(shape = RoundedCornerShape(16.dp), modifier = Modifier.padding(16.dp)) {
@@ -280,10 +283,10 @@ fun GardenScreen(
             }
         }
 
+        // Diálogo de Actividad (Plantar/Sembrar/Recolectar)
         if (showPlantDialog) {
             val planterId = selectedPots.keys.first().first
             val currentOccupiedPots by gardenViewModel.getFlowerpots(planterId).collectAsState(initial = emptyList())
-            // ... (Resto del diálogo PlantDialog igual, solo cambia el confirmButton arriba en confirmRemoval) ...
             AlertDialog(
                 onDismissRequest = { showPlantDialog = false },
                 title = { Text(strings.gardenManagePots) },
@@ -362,7 +365,7 @@ fun GardenScreen(
             )
         }
 
-        // --- DIÁLOGOS DE CREACIÓN Y EDICIÓN ---
+        // Crear Jardinera
         if (showCreateDialog) {
             AlertDialog(
                 onDismissRequest = { showCreateDialog = false },
@@ -384,6 +387,7 @@ fun GardenScreen(
             )
         }
 
+        // Editar Nombre
         if (showEditDialog && planterToEdit != null) {
             AlertDialog(
                 onDismissRequest = { showEditDialog = false },
@@ -399,6 +403,7 @@ fun GardenScreen(
             )
         }
 
+        // Confirmar Borrado de Jardinera
         if (showDeleteConfirm && planterToDelete != null) {
             AlertDialog(
                 onDismissRequest = { showDeleteConfirm = false },
@@ -416,20 +421,57 @@ fun GardenScreen(
     }
 }
 
-// ... PlanterCard y FlowerpotView se mantienen igual ...
 @Composable
-fun PlanterCard(planter: Planter, gardenViewModel: GardenViewModel, selectedPots: Set<Triple<String, Int, Int>>, onDelete: () -> Unit, onEditName: () -> Unit, onPotClick: (Int, Int, Boolean) -> Unit, onLogClick: () -> Unit) {
+fun PlanterCard(
+    planter: Planter,
+    gardenViewModel: GardenViewModel,
+    selectedPots: Set<Triple<String, Int, Int>>,
+    onDelete: () -> Unit,
+    onEditName: () -> Unit,
+    onPotClick: (Int, Int, Boolean) -> Unit,
+    onLogClick: () -> Unit
+) {
     val strings = LocalStrings.current
+
+    // Handler de compartir multiplataforma
+    val shareHandler = rememberShareHandler()
+
     val occupiedPots by gardenViewModel.getFlowerpots(planter.id).collectAsState(initial = emptyList())
+
     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Column(Modifier.padding(16.dp)) {
             Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
+                // Nombre y Edición
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                     Text(planter.nombre, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     IconButton(onClick = onEditName, modifier = Modifier.size(32.dp)) { Icon(Icons.Default.Edit, null, Modifier.size(18.dp), MaterialTheme.colorScheme.outline) }
                 }
-                IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error) }
+
+                // Compartir y Borrar
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = {
+                        // --- CAMBIO AQUÍ: Generamos el link ---
+                        // Usamos un esquema web estándar. Para que abra tu app en el futuro,
+                        // necesitarás configurar "App Links" en el Manifest de Android.
+                        val deepLinkUrl = "https://huertopedia.app/jardinera/${planter.id}"
+
+                        val text = "🌱 ¡Mira mi progreso en Huertopedia! \n\n" +
+                                "Estoy cuidando la jardinera '${planter.nombre}' con ${occupiedPots.size} plantas. 🌻\n\n" +
+                                "Ver aquí: $deepLinkUrl"
+
+                        shareHandler(text)
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = "Compartir",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error) }
+                }
             }
+            // ... El resto de la tarjeta sigue igual ...
             Text(strings.gardenPlanterSize.replace("{0}", planter.filas.toString()).replace("{1}", planter.columnas.toString()), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(12.dp))
 
@@ -491,7 +533,7 @@ fun NumberSelector(label: String, value: Int, onValueChange: (Int) -> Unit, rang
     }
 }
 
-// --- NUEVO COMPONENTE: ANIMACIÓN DE HOJAS FLOTANTES ---
+// --- ANIMACIÓN DE HOJAS FLOTANTES (MULTIPLATFORM) ---
 @Composable
 fun HarvestAnimationOverlay() {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -510,7 +552,6 @@ fun HarvestAnimationOverlay() {
         }
 
         particles.forEach { particle ->
-            // Ahora podemos llamar a esto porque estamos dentro de un Box (BoxWithConstraints hereda de BoxScope)
             LeafParticle(particle, containerWidth, containerHeight)
         }
     }
@@ -523,7 +564,7 @@ data class LeafParticleData(
     val icon: ImageVector
 )
 
-// CAMBIO IMPORTANTE: Añadimos "BoxScope." antes del nombre de la función
+// Extensión de BoxScope para poder usar .align()
 @Composable
 fun BoxScope.LeafParticle(
     data: LeafParticleData,
@@ -556,7 +597,7 @@ fun BoxScope.LeafParticle(
                 x = (containerWidth * data.startXRatio) - 24.dp,
                 y = offsetY.value.dp
             )
-            .align(Alignment.BottomStart) // ¡Ahora esto funciona!
+            .align(Alignment.BottomStart)
             .alpha(alpha.value)
             .size(32.dp)
     )
