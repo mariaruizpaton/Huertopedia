@@ -22,29 +22,36 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mariaruiz.huertopedia.viewmodel.GardenViewModel
 import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
 import com.mariaruiz.huertopedia.i18n.LocalStrings
+// Importamos tu utilidad de fecha
+import com.mariaruiz.huertopedia.utils.toHumanDateTimeString
 
 @Composable
 fun HomeScreen(
     onLogout: () -> Unit,
     viewModel: LoginViewModel,
+    gardenViewModel: GardenViewModel,
     navigateToGardenManagement: () -> Unit,
     navigateToWiki: () -> Unit,
     navigateToProfile : () -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
     val strings = LocalStrings.current
+
+    // Observamos la última actividad del ViewModel
+    val lastActivity by gardenViewModel.globalLastActivity.collectAsState(initial = null)
 
     Scaffold(
         topBar = {
@@ -87,7 +94,6 @@ fun HomeScreen(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Cabecera traducida correctamente con {0}
             Text(
                 text = strings.homeWelcome.replace("{0}", viewModel.name ?: "Usuario"),
                 style = MaterialTheme.typography.headlineMedium,
@@ -132,15 +138,27 @@ fun HomeScreen(
                 modifier = Modifier
                     .padding(bottom = 32.dp)
                     .border(
-                        width = 1.dp, 
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), 
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
                         shape = RoundedCornerShape(16.dp)
                     ),
                 shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.surface
             ) {
+                // Usamos tus utilidades para formatear la fecha/hora
+                val activityText = if (lastActivity != null) {
+                    val tipo = lastActivity?.eventType ?: "Actividad"
+                    val desc = lastActivity?.notes?.take(20) ?: ""
+                    // AQUÍ ESTÁ EL CAMBIO: Usamos tu DateUtils
+                    val fechaStr = lastActivity!!.timestamp.toHumanDateTimeString()
+
+                    "$tipo: $desc ($fechaStr)"
+                } else {
+                    "No hay actividad reciente"
+                }
+
                 Text(
-                    text = strings.homeActivitySample,
+                    text = activityText,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.bodyMedium
