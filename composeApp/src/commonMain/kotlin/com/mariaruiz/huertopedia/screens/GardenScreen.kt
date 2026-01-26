@@ -348,7 +348,7 @@ fun GardenScreen(
                                     return@Button
                                 }
                                 if (selectedPlantForPot != null) {
-                                    val conflict = checkConflicts(selectedPlantForPot!!, positions, currentOccupiedPots)
+                                    val conflict = checkConflicts(planterId, selectedPlantForPot!!, positions, currentOccupiedPots)
                                     if (conflict != null) { conflictMessage = conflict; showConflictDialog = true; return@Button }
                                 }
                                 gardenViewModel.manageFlowerpots(planterId, positions, selectedPlantForPot, tipoAccionSeleccionada)
