@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import com.mariaruiz.huertopedia.utils.getCurrentTimeMillis
 import com.mariaruiz.huertopedia.utils.toFirebaseData
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 
 class GardenViewModel : ViewModel() {
     private val auth = Firebase.auth
@@ -23,6 +25,23 @@ class GardenViewModel : ViewModel() {
 
     private val _planters = MutableStateFlow<List<Planter>>(emptyList())
     val planters = _planters.asStateFlow()
+
+    val globalLastActivity: Flow<CropLog?> = planters.flatMapLatest { plantersList ->
+        if (plantersList.isEmpty()) {
+            flowOf(null)
+        } else {
+            // Creamos una lista de flujos (uno por cada jardinera)
+            val logsFlows = plantersList.map { observeCropLogs(it.id) }
+
+            // Combinamos todos los flujos en uno solo
+            combine(logsFlows) { logsArray ->
+                // logsArray contiene varias listas de logs. Las aplanamos en una sola lista.
+                logsArray.flatMap { it }
+                    // Ordenamos para obtener el más reciente por fecha (asumiendo que CropLog tiene un campo 'fecha')
+                    .maxByOrNull { it.timestamp }
+            }
+        }
+    }
 
     init {
         loadAvailablePlants()
@@ -131,7 +150,7 @@ class GardenViewModel : ViewModel() {
             if (uid != null && planterId.isNotBlank()) {
                 db.collection("usuario").document(uid)
                     .collection("planters").document(planterId)
-                    .collection("croplogs")
+                    .collection("crop_log")
                     .snapshots()
                     .map { snapshot ->
                         snapshot.documents.mapNotNull { doc ->
@@ -158,7 +177,7 @@ class GardenViewModel : ViewModel() {
                 }
                 db.collection("usuario").document(uid)
                     .collection("planters").document(log.planterId)
-                    .collection("croplogs").add(finalLog)
+                    .collection("crop_log").add(finalLog)
             } catch (e: Exception) {}
         }
     }
@@ -169,7 +188,7 @@ class GardenViewModel : ViewModel() {
             try {
                 db.collection("usuario").document(uid)
                     .collection("planters").document(planterId)
-                    .collection("croplogs").document(logId).delete()
+                    .collection("crop_logs").document(logId).delete()
             } catch (e: Exception) {}
         }
     }

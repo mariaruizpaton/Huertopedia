@@ -121,6 +121,7 @@ fun App(
                         HomeScreen(
                             onLogout = { viewModel.logout() },
                             viewModel = viewModel,
+                            gardenViewModel = gardenViewModel,
                             navigateToGardenManagement = { currentScreen.value = Screen.GardenManagement },
                             navigateToWiki = { currentScreen.value = Screen.Wiki },
                             navigateToProfile = { currentScreen.value = Screen.User }
