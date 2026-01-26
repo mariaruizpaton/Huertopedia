@@ -3,8 +3,6 @@ package com.mariaruiz.huertopedia.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mariaruiz.huertopedia.model.*
-import com.mariaruiz.huertopedia.utils.getCurrentTimeMillis
-import com.mariaruiz.huertopedia.utils.toFirebaseData
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.auth.auth
 import dev.gitlive.firebase.firestore.firestore
@@ -12,6 +10,8 @@ import dev.gitlive.firebase.storage.storage
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import com.mariaruiz.huertopedia.utils.getCurrentTimeMillis
+import com.mariaruiz.huertopedia.utils.toFirebaseData
 
 class GardenViewModel : ViewModel() {
     private val auth = Firebase.auth
@@ -43,7 +43,6 @@ class GardenViewModel : ViewModel() {
                                 try {
                                     doc.data<Planter>().copy(id = doc.id)
                                 } catch (e: Exception) {
-                                    println("Error mapeando: ${e.message}")
                                     null
                                 }
                             }
@@ -58,23 +57,16 @@ class GardenViewModel : ViewModel() {
 
     fun createPlanter(nombre: String, filas: Int, columnas: Int) {
         val uid = auth.currentUser?.uid ?: return
-        val validRows = filas.coerceIn(GardenConfig.MIN_ROWS, GardenConfig.MAX_ROWS)
-        val validCols = columnas.coerceIn(GardenConfig.MIN_COLS, GardenConfig.MAX_COLS)
-
         viewModelScope.launch {
             try {
                 val data = mapOf(
                     "nombre" to nombre,
-                    "filas" to validRows,
-                    "columnas" to validCols,
+                    "filas" to filas,
+                    "columnas" to columnas,
                     "fechaCreacion" to clockNow()
                 )
-                db.collection("usuario").document(uid)
-                    .collection("planters")
-                    .add(data)
-            } catch (e: Exception) {
-                println("Error crear: ${e.message}")
-            }
+                db.collection("usuario").document(uid).collection("planters").add(data)
+            } catch (e: Exception) {}
         }
     }
 
@@ -82,12 +74,13 @@ class GardenViewModel : ViewModel() {
         val uid = auth.currentUser?.uid ?: return
         viewModelScope.launch {
             try {
+                // OBTENER URL DE DESCARGA SI ES NECESARIO
                 var urlPublica = planta?.imagenUrl
                 if (urlPublica != null && !urlPublica.startsWith("http")) {
                     try {
                         urlPublica = storage.reference(urlPublica).getDownloadUrl()
                     } catch (e: Exception) {
-                        println("Error URL: ${e.message}")
+                        println("Error obteniendo URL para maceta: ${e.message}")
                     }
                 }
 
@@ -97,22 +90,21 @@ class GardenViewModel : ViewModel() {
                         .collection("planters").document(planterId)
                         .collection("flowerpots").document(potId)
 
-                    if (accion == "Recolectar") {
+                    if (accion == "Recolectar" || accion == "Arrancar") {
                         ref.delete()
                     } else {
                         val flowerpot = GardenFlowerpot(
                             id = potId, planterId = planterId,
                             fila = f, columna = c,
                             plantaId = planta?.id, nombrePlanta = planta?.nombreComun,
-                            imagenUrl = urlPublica, fechaSiembra = clockNow(),
+                            imagenUrl = urlPublica, // Guardamos la URL pública
+                            fechaSiembra = clockNow(),
                             tipoAccion = accion
                         )
                         ref.set(flowerpot)
                     }
                 }
-            } catch (e: Exception) {
-                println("Error macetas: ${e.message}")
-            }
+            } catch (e: Exception) {}
         }
     }
 
@@ -130,81 +122,57 @@ class GardenViewModel : ViewModel() {
             }
         }
     }
-    fun observeCropLogs(planterId: String): Flow<List<CropLog>> {
-        val uid = auth.currentUser?.uid
-        if (uid == null || planterId.isBlank()) return flowOf(emptyList())
 
-        return db.collection("usuario").document(uid)
-            .collection("planters").document(planterId)
-            .collection("crop_log")
-            .snapshots()
-            .map { snapshot ->
-                snapshot.documents.mapNotNull {
-                    try {
-                        it.data<CropLog>().copy(id = it.id)
-                    } catch (e: Exception) {
-                        println("Error al mapear CropLog: ${e.message}")
-                        null
+    // --- FUNCIONES DEL DIARIO (CROP LOG) ---
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun observeCropLogs(planterId: String): Flow<List<CropLog>> {
+        return auth.authStateChanged.flatMapLatest { user ->
+            val uid = user?.uid
+            if (uid != null && planterId.isNotBlank()) {
+                db.collection("usuario").document(uid)
+                    .collection("planters").document(planterId)
+                    .collection("croplogs")
+                    .snapshots()
+                    .map { snapshot ->
+                        snapshot.documents.mapNotNull { doc ->
+                            try {
+                                doc.data<CropLog>().copy(id = doc.id)
+                            } catch (e: Exception) { null }
+                        }
                     }
-                }
-            }
+            } else flowOf(emptyList())
+        }
     }
 
-    fun addCropLogEntry(log: CropLog, imageBytes: ByteArray? = null) {
+    fun addCropLogEntry(log: CropLog, imageBytes: ByteArray?) {
         val uid = auth.currentUser?.uid ?: return
         viewModelScope.launch {
             try {
                 var finalLog = log
-
-                // 1. Si hay foto, la subimos y OBTENEMOS LA URL PÚBLICA
                 if (imageBytes != null) {
-                    val imagePath = "crop_logs/${log.planterId}/${log.timestamp}.jpg"
-                    try {
-                        val storageRef = storage.reference.child(imagePath)
-
-                        // A. Subir los bytes
-                        storageRef.putData(imageBytes.toFirebaseData())
-
-                        // B. ¡IMPORTANTE! Obtener la URL de descarga (https://...)
-                        val downloadUrl = storageRef.getDownloadUrl()
-
-                        // C. Guardamos la URL en el log, no la ruta interna
-                        finalLog = log.copy(photoPath = downloadUrl)
-
-                    } catch (e: Exception) {
-                        println("Error subiendo imagen: ${e.message}")
-                    }
+                    val path = "logs/${uid}_${getCurrentTimeMillis()}.jpg"
+                    val ref = storage.reference.child(path)
+                    ref.putData(imageBytes.toFirebaseData())
+                    val url = ref.getDownloadUrl()
+                    finalLog = log.copy(photoPath = url)
                 }
-
-                // 2. Guardamos en Firestore (igual que antes)
-                val collectionRef = db.collection("usuario").document(uid)
+                db.collection("usuario").document(uid)
                     .collection("planters").document(log.planterId)
-                    .collection("crop_log")
-
-                val newDocRef = collectionRef.add(finalLog)
-                collectionRef.document(newDocRef.id).update("id" to newDocRef.id)
-
-            } catch (e: Exception) {
-                println("Error al añadir entrada: ${e.message}")
-            }
+                    .collection("croplogs").add(finalLog)
+            } catch (e: Exception) {}
         }
     }
+
     fun deleteCropLogEntry(planterId: String, logId: String) {
         val uid = auth.currentUser?.uid ?: return
-        if (planterId.isBlank() || logId.isBlank()) return
-
         viewModelScope.launch {
             try {
                 db.collection("usuario").document(uid)
                     .collection("planters").document(planterId)
-                    .collection("crop_log").document(logId)
-                    .delete()
-            } catch (e: Exception) {
-                println("Error al borrar la entrada del diario: ${e.message}")
-            }
+                    .collection("croplogs").document(logId).delete()
+            } catch (e: Exception) {}
         }
     }
-
 
     fun loadAvailablePlants() {
         viewModelScope.launch {
@@ -215,10 +183,10 @@ class GardenViewModel : ViewModel() {
                         id = doc.id,
                         nombreComun = doc.get<String>("nombre_comun") ?: "",
                         nombreCientifico = doc.get<String>("nombre_cientifico") ?: "",
-                        categoria = doc.get<String>("categoria") ?: "",
+                        categoria = doc.get<String>("categoria") ?: "", 
                         imagenUrl = doc.get<String>("imagen_url"),
                         siembra = doc.get<String>("siembra") ?: "",
-                        recoleccion = doc.get<String>("recoleccion") ?: "", // CORREGIDO: Sin tilde
+                        recoleccion = doc.get<String>("recoleccion") ?: "",
                         temperaturaOptima = doc.get<String>("temperatura_optima") ?: "",
                         riego = doc.get<String>("riego") ?: "",
                         abono = doc.get<String>("abono") ?: "",
@@ -228,9 +196,7 @@ class GardenViewModel : ViewModel() {
                     )
                 }
                 _availablePlants.value = plants
-            } catch (e: Exception) {
-                println("Error catálogo huerto: ${e.message}")
-            }
+            } catch (e: Exception) {}
         }
     }
 
@@ -241,23 +207,17 @@ class GardenViewModel : ViewModel() {
                 db.collection("usuario").document(uid)
                     .collection("planters").document(planterId)
                     .update("nombre" to newName)
-            } catch (e: Exception) {
-                println("Error al actualizar nombre: ${e.message}")
-            }
+            } catch (e: Exception) {}
         }
     }
 
     fun deletePlanter(planterId: String) {
         val uid = auth.currentUser?.uid ?: return
-        if (planterId.isBlank()) return
         viewModelScope.launch {
             try {
                 db.collection("usuario").document(uid)
-                    .collection("planters").document(planterId)
-                    .delete()
-            } catch (e: Exception) {
-                println("Error al borrar: ${e.message}")
-            }
+                    .collection("planters").document(planterId).delete()
+            } catch (e: Exception) {}
         }
     }
 

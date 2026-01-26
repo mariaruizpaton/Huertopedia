@@ -67,6 +67,7 @@ interface AppStrings {
     val gardenActionPlant: String
     val gardenActionSow: String
     val gardenActionHarvest: String
+    val gardenActionPullOut: String
     val gardenSelectPlant: String
     val gardenConfirm: String
     val gardenDelete: String
@@ -79,7 +80,13 @@ interface AppStrings {
     val gardenSelectionErrorText: String
     val gardenMultiplePlantersErrorTitle: String
     val gardenMultiplePlantersErrorText: String
+    val gardenConflictTitle: String
+    val gardenConflictText: String
+    val gardenConfirmRemovalHarvest: String
+    val gardenConfirmRemovalPullOut: String
     val gardenOk: String
+    val gardenYes: String
+    val gardenNo: String
     val gardenEditNameTitle: String
     val gardenNewNameLabel: String
     val gardenSave: String
@@ -198,6 +205,7 @@ object EnStrings : AppStrings {
     override val gardenActionPlant = "Plant"
     override val gardenActionSow = "Sow"
     override val gardenActionHarvest = "Harvest"
+    override val gardenActionPullOut = "Pull out"
     override val gardenSelectPlant = "Select plant"
     override val gardenConfirm = "Confirm"
     override val gardenDelete = "Delete"
@@ -210,7 +218,13 @@ object EnStrings : AppStrings {
     override val gardenSelectionErrorText = "You cannot select occupied and empty pots at the same time."
     override val gardenMultiplePlantersErrorTitle = "Different Gardeners"
     override val gardenMultiplePlantersErrorText = "You cannot select pots from different gardeners at the same time."
+    override val gardenConflictTitle = "Enemy plants detected"
+    override val gardenConflictText = "Warning: {0} and {1} are enemy plants. Are you sure you want to have them together?"
+    override val gardenConfirmRemovalHarvest = "Are you sure you want to harvest?"
+    override val gardenConfirmRemovalPullOut = "Are you sure you want to pull out?"
     override val gardenOk = "Got it"
+    override val gardenYes = "Yes"
+    override val gardenNo = "No"
     override val gardenEditNameTitle = "Edit name"
     override val gardenNewNameLabel = "New name"
     override val gardenSave = "Save"
@@ -324,6 +338,7 @@ object EsStrings : AppStrings {
     override val gardenActionPlant = "Plantar"
     override val gardenActionSow = "Sembrar"
     override val gardenActionHarvest = "Recolectar"
+    override val gardenActionPullOut = "Arrancar"
     override val gardenSelectPlant = "Selecciona planta"
     override val gardenConfirm = "Confirmar"
     override val gardenDelete = "Eliminar"
@@ -336,7 +351,13 @@ object EsStrings : AppStrings {
     override val gardenSelectionErrorText = "No puedes seleccionar macetas ocupadas y vacías al mismo tiempo."
     override val gardenMultiplePlantersErrorTitle = "Jardineras diferentes"
     override val gardenMultiplePlantersErrorText = "No puedes seleccionar macetas de jardineras diferentes al mismo tiempo."
+    override val gardenConflictTitle = "Plantas enemigas detectadas"
+    override val gardenConflictText = "Aviso: {0} y {1} son plantas enemigas. ¿Estás seguro de tenerlas juntas?"
+    override val gardenConfirmRemovalHarvest = "¿Estás seguro de que quieres recolectar?"
+    override val gardenConfirmRemovalPullOut = "¿Estás seguro de que quieres arrancar?"
     override val gardenOk = "Entendido"
+    override val gardenYes = "Sí"
+    override val gardenNo = "No"
     override val gardenEditNameTitle = "Editar nombre"
     override val gardenNewNameLabel = "Nuevo nombre"
     override val gardenSave = "Guardar"

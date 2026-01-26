@@ -35,7 +35,6 @@ import com.mariaruiz.huertopedia.utils.getCurrentTimeMillis
 import com.mariaruiz.huertopedia.utils.toHumanDateString
 import com.mariaruiz.huertopedia.viewmodel.GardenViewModel
 import kotlin.math.roundToInt
-import androidx.compose.foundation.layout.IntrinsicSize
 import com.mariaruiz.huertopedia.utils.rememberCameraLauncher
 import com.mariaruiz.huertopedia.utils.rememberImagePicker
 import dev.icerock.moko.permissions.Permission
@@ -58,8 +57,6 @@ fun CropLogScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var logToDelete by remember { mutableStateOf<CropLog?>(null) }
-
-    // --- NUEVO: Estado para la visualización de imagen a pantalla completa ---
     var selectedImageUrl by remember { mutableStateOf<String?>(null) }
 
     val eventTypes = listOf(
@@ -77,7 +74,6 @@ fun CropLogScreen(
     var notesContent by remember { mutableStateOf("") }
     var irrigationType by remember { mutableStateOf(strings.irrigationManual) }
     var irrigationMinutes by remember { mutableFloatStateOf(10f) }
-
     var selectedImageBytes by remember { mutableStateOf<ByteArray?>(null) }
 
     val imagePicker = rememberImagePicker { bytes -> selectedImageBytes = bytes }
@@ -89,34 +85,21 @@ fun CropLogScreen(
 
     BackHandler { onBack() }
 
-    // --- NUEVO: DIÁLOGO DE IMAGEN A PANTALLA COMPLETA ---
     if (selectedImageUrl != null) {
         Dialog(
             onDismissRequest = { selectedImageUrl = null },
-            properties = DialogProperties(usePlatformDefaultWidth = false) // Ocupar toda la pantalla
+            properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black)
-            ) {
-                // Imagen centrada y ajustada
+            Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
                 KamelImage(
                     resource = asyncPainterResource(selectedImageUrl!!),
                     contentDescription = null,
-                    contentScale = ContentScale.Fit, // Fit para ver la foto entera sin recortes
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clickable { selectedImageUrl = null } // Click para cerrar también
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize().clickable { selectedImageUrl = null }
                 )
-
-                // Botón de cerrar (Arriba a la derecha)
                 IconButton(
                     onClick = { selectedImageUrl = null },
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(16.dp)
-                        .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                    modifier = Modifier.align(Alignment.TopEnd).padding(16.dp).background(Color.Black.copy(alpha = 0.5f), CircleShape)
                 ) {
                     Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = Color.White)
                 }
@@ -150,12 +133,11 @@ fun CropLogScreen(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
-                Icon(Icons.Default.Add, contentDescription = strings.cropLogNewEntry)
+                Icon(Icons.Default.Add, contentDescription = strings.cropLogAddEntry)
             }
         },
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
-        // ... (Todo el bloque de showAddDialog y showDeleteDialog sigue EXACTAMENTE IGUAL) ...
         if (showAddDialog) {
             AlertDialog(
                 onDismissRequest = { showAddDialog = false },
@@ -217,7 +199,6 @@ fun CropLogScreen(
                                         maxLines = 5,
                                         shape = RoundedCornerShape(12.dp)
                                     )
-
                                     if (selectedEventType == strings.eventNotes || selectedEventType == strings.eventDisease) {
                                         OutlinedButton(
                                             onClick = {
@@ -231,24 +212,16 @@ fun CropLogScreen(
                                                 }
                                             },
                                             modifier = Modifier.fillMaxWidth(),
-                                            shape = RoundedCornerShape(12.dp),
-                                            colors = if (selectedImageBytes != null)
-                                                ButtonDefaults.outlinedButtonColors(
-                                                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                                                ) else ButtonDefaults.outlinedButtonColors()
+                                            shape = RoundedCornerShape(12.dp)
                                         ) {
                                             if (selectedImageBytes != null) {
-                                                Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                                Icon(Icons.Default.Check, null, tint = MaterialTheme.colorScheme.primary)
                                                 Spacer(Modifier.width(8.dp))
-                                                Text("Foto adjuntada", color = MaterialTheme.colorScheme.primary)
-                                                Spacer(Modifier.weight(1f))
-                                                IconButton(onClick = { selectedImageBytes = null }, modifier = Modifier.size(24.dp)) {
-                                                    Icon(Icons.Default.Close, null)
-                                                }
+                                                Text("Foto adjuntada")
                                             } else {
-                                                Icon(Icons.Default.PhotoCamera, contentDescription = null)
+                                                Icon(Icons.Default.PhotoCamera, null)
                                                 Spacer(Modifier.width(8.dp))
-                                                Text("Añadir foto")
+                                                Text(strings.cropLogAddPhoto)
                                             }
                                         }
                                     }
@@ -264,7 +237,6 @@ fun CropLogScreen(
                         } else {
                             notesContent.takeIf { it.isNotBlank() }
                         }
-
                         val newLog = CropLog(
                             planterId = planter.id,
                             timestamp = getCurrentTimeMillis(),
@@ -284,10 +256,7 @@ fun CropLogScreen(
                     }) { Text(strings.gardenSave) }
                 },
                 dismissButton = {
-                    TextButton(onClick = {
-                        showAddDialog = false
-                        selectedImageBytes = null
-                    }) { Text(strings.gardenCancel) }
+                    TextButton(onClick = { showAddDialog = false; selectedImageBytes = null }) { Text(strings.gardenCancel) }
                 }
             )
         }
@@ -306,12 +275,11 @@ fun CropLogScreen(
                 dismissButton = { TextButton(onClick = { showDeleteDialog = false }) { Text(strings.gardenCancel) } }
             )
         }
-        // ... (Fin del bloque de diálogos) ...
 
         if (cropLogs.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Default.HistoryEdu, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.surfaceVariant)
+                    Icon(Icons.Default.HistoryEdu, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.surfaceVariant)
                     Spacer(Modifier.height(16.dp))
                     Text(strings.cropLogNoEntries, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -323,16 +291,7 @@ fun CropLogScreen(
             ) {
                 val sortedLogs = cropLogs.sortedByDescending { it.timestamp }
                 items(sortedLogs) { log ->
-                    TimelineItem(
-                        log = log,
-                        strings = strings,
-                        onDeleteClick = {
-                            logToDelete = log
-                            showDeleteDialog = true
-                        },
-                        // --- NUEVO: Pasamos la acción de click al item
-                        onImageClick = { url -> selectedImageUrl = url }
-                    )
+                    TimelineItem(log = log, strings = strings, onDeleteClick = { logToDelete = log; showDeleteDialog = true }, onImageClick = { url -> selectedImageUrl = url })
                 }
             }
         }
@@ -340,47 +299,21 @@ fun CropLogScreen(
 }
 
 @Composable
-fun TimelineItem(
-    log: CropLog,
-    strings: AppStrings,
-    onDeleteClick: () -> Unit,
-    // --- NUEVO: Callback para el click en la foto
-    onImageClick: (String) -> Unit
-) {
+fun TimelineItem(log: CropLog, strings: AppStrings, onDeleteClick: () -> Unit, onImageClick: (String) -> Unit) {
     val eventColor = getEventColor(log.eventType, strings)
     val eventIcon = getEventIcon(log.eventType, strings)
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .height(IntrinsicSize.Min)
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.width(40.dp)
-        ) {
+    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(IntrinsicSize.Min)) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(40.dp)) {
             Box(modifier = Modifier.width(2.dp).weight(1f).background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)))
-            Box(
-                modifier = Modifier.size(32.dp).clip(CircleShape).background(eventColor.copy(alpha = 0.2f)).border(2.dp, eventColor, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.size(32.dp).clip(CircleShape).background(eventColor.copy(alpha = 0.2f)).border(2.dp, eventColor, CircleShape), contentAlignment = Alignment.Center) {
                 Icon(imageVector = eventIcon, contentDescription = null, tint = eventColor, modifier = Modifier.size(16.dp))
             }
             Box(modifier = Modifier.width(2.dp).weight(1f).background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)))
         }
         Spacer(modifier = Modifier.width(12.dp))
-        Card(
-            modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-        ) {
+        Card(modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text(text = log.eventType, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                     Text(text = log.timestamp.toHumanDateString(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                 }
@@ -389,23 +322,10 @@ fun TimelineItem(
                     Text(text = log.notes, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(modifier = Modifier.height(8.dp))
                 }
-
                 if (log.photoPath != null) {
-                    KamelImage(
-                        resource = asyncPainterResource(log.photoPath),
-                        contentDescription = "Foto del registro",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(180.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp))
-                            // --- NUEVO: Hacemos la foto clicable
-                            .clickable { onImageClick(log.photoPath) }
-                    )
+                    KamelImage(resource = asyncPainterResource(log.photoPath), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(8.dp)).border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp)).clickable { onImageClick(log.photoPath) })
                     Spacer(modifier = Modifier.height(8.dp))
                 }
-
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
                     IconButton(onClick = onDeleteClick, modifier = Modifier.size(24.dp)) {
                         Icon(Icons.Default.Close, null, tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
@@ -416,7 +336,6 @@ fun TimelineItem(
     }
 }
 
-// ... (getEventColor y getEventIcon siguen igual) ...
 @Composable
 fun getEventColor(eventType: String, strings: AppStrings): Color {
     return when (eventType) {
@@ -435,7 +354,7 @@ fun getEventIcon(eventType: String, strings: AppStrings): ImageVector {
     return when (eventType) {
         strings.eventIrrigation -> Icons.Default.WaterDrop
         strings.eventDisease -> Icons.Default.BugReport
-        strings.eventFertilization -> Icons.Default.Science
+        strings.eventFertilization -> Icons.Default.Yard
         strings.eventGermination -> Icons.Default.Spa
         strings.eventWeeding -> Icons.Default.ContentCut
         strings.eventTrellising -> Icons.Default.Height
