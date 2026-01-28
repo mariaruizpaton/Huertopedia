@@ -45,7 +45,8 @@ fun HomeScreen(
     gardenViewModel: GardenViewModel,
     navigateToGardenManagement: () -> Unit,
     navigateToWiki: () -> Unit,
-    navigateToProfile : () -> Unit
+    navigateToProfile : () -> Unit,
+    navigateToAbout: () -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
     val strings = LocalStrings.current
@@ -79,7 +80,18 @@ fun HomeScreen(
                     ) {
                         DropdownMenuItem(
                             text = { Text(strings.viewProfile) },
-                            onClick = navigateToProfile
+                            onClick = {
+                                showMenu = false
+                                navigateToProfile()
+                            }
+                        )
+
+                        DropdownMenuItem(
+                            text = { Text("Acerca de") },
+                            onClick = {
+                                showMenu = false
+                                navigateToAbout()
+                            }
                         )
                     }
                 }

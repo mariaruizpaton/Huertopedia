@@ -23,7 +23,7 @@ import dev.gitlive.firebase.firestore.firestore
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 enum class Screen {
-    Login, User, Home, Wiki, GardenManagement, PlantDetail, CropLog
+    Login, User, Home, Wiki, GardenManagement, PlantDetail, CropLog, About
 }
 
 @Composable
@@ -124,7 +124,8 @@ fun App(
                             gardenViewModel = gardenViewModel,
                             navigateToGardenManagement = { currentScreen.value = Screen.GardenManagement },
                             navigateToWiki = { currentScreen.value = Screen.Wiki },
-                            navigateToProfile = { currentScreen.value = Screen.User }
+                            navigateToProfile = { currentScreen.value = Screen.User },
+                            navigateToAbout = { currentScreen.value = Screen.About}
                         )
                     }
                     Screen.Wiki -> {
@@ -164,6 +165,11 @@ fun App(
                                 gardenViewModel = gardenViewModel
                             )
                         }
+                    }
+                    Screen.About -> {
+                        AboutScreen(
+                            onBack = { currentScreen.value = Screen.Home }
+                        )
                     }
                 }
             }
