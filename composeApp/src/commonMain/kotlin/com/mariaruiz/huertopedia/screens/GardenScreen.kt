@@ -34,6 +34,7 @@ import com.mariaruiz.huertopedia.viewmodel.GardenViewModel
 import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
 import com.mariaruiz.huertopedia.i18n.LocalStrings
 import com.mariaruiz.huertopedia.utils.rememberShareHandler
+import com.mariaruiz.huertopedia.utils.rememberVibrationHandler
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import kotlinx.coroutines.delay
@@ -80,6 +81,7 @@ fun GardenScreen(
     var showHarvestAnimation by remember { mutableStateOf(false) }
 
     val isHarvestMode = selectedPots.values.any { it }
+    val vibrationHandler = rememberVibrationHandler()
 
     LaunchedEffect(isHarvestMode) {
         tipoAccionSeleccionada = if (isHarvestMode) "Recolectar" else "Plantar"
@@ -187,7 +189,13 @@ fun GardenScreen(
         if (showConfirmRemovalDialog) {
             AlertDialog(
                 onDismissRequest = { showConfirmRemovalDialog = false },
-                icon = { Icon(imageVector = if(tipoAccionSeleccionada == "Recolectar") Icons.Default.ShoppingBasket else Icons.Default.Warning, contentDescription = null, tint = if(tipoAccionSeleccionada == "Recolectar") Color(0xFF4CAF50) else Color.Red) },
+                icon = {
+                    Icon(
+                        imageVector = if(tipoAccionSeleccionada == "Recolectar") Icons.Default.ShoppingBasket else Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = if(tipoAccionSeleccionada == "Recolectar") Color(0xFF4CAF50) else Color.Red
+                    )
+                },
                 title = { Text(text = if(tipoAccionSeleccionada == "Recolectar") strings.gardenActionHarvest else strings.gardenActionPullOut, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
                 text = {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
@@ -200,6 +208,10 @@ fun GardenScreen(
                                 val planterId = selectedPots.keys.first().first
                                 val positions = selectedPots.keys.map { it.second to it.third }
                                 gardenViewModel.manageFlowerpots(planterId, positions, null, tipoAccionSeleccionada)
+
+                                // --- AQUI AÑADIMOS LA VIBRACIÓN (200ms) ---
+                                vibrationHandler(200L)
+
                                 if (tipoAccionSeleccionada == "Recolectar") showHarvestAnimation = true
                                 showConfirmRemovalDialog = false
                                 showPlantDialog = false
@@ -309,6 +321,9 @@ fun GardenScreen(
                                 if (conflict != null) { conflictMessage = conflict; showConflictDialog = true; return@Button }
                             }
                             gardenViewModel.manageFlowerpots(planterId, positions, selectedPlantForPot, tipoAccionSeleccionada)
+
+                            vibrationHandler(50L)
+
                             showPlantDialog = false
                             selectedPots = emptyMap()
                         }) { Text(strings.gardenConfirm) }
