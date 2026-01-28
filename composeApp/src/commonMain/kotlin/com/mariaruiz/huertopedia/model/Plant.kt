@@ -5,16 +5,16 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Plant(
     val id: String = "",
-    val nombreComun: String = "",
+    val nombreComun: LocalizedText = LocalizedText(),
     val nombreCientifico: String = "",
-    val categoria: String = "",
+    val categoria: LocalizedText = LocalizedText(),
     val imagenUrl: String? = null,
-    val siembra: String = "",
-    val recoleccion: String = "",
+    val siembra: LocalizedText = LocalizedText(),
+    val recoleccion: LocalizedText = LocalizedText(),
     val temperaturaOptima: String = "",
-    val riego: String = "",
-    val abono: String = "",
-    val cuidados: String = "",
-    val plantasAmigables: List<String> = emptyList(),
-    val plantasEnemigas: List<String> = emptyList()
+    val riego: LocalizedText = LocalizedText(),
+    val abono: LocalizedText = LocalizedText(),
+    val cuidados: LocalizedText = LocalizedText(),
+    val plantasAmigables: List<LocalizedText> = emptyList(),
+    val plantasEnemigas: List<LocalizedText> = emptyList()
 )

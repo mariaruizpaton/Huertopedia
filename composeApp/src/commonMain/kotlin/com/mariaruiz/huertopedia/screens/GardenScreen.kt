@@ -33,6 +33,7 @@ import com.mariaruiz.huertopedia.utils.BackHandler
 import com.mariaruiz.huertopedia.viewmodel.GardenViewModel
 import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
 import com.mariaruiz.huertopedia.i18n.LocalStrings
+import com.mariaruiz.huertopedia.repositories.LanguageRepository
 import com.mariaruiz.huertopedia.utils.rememberShareHandler
 import com.mariaruiz.huertopedia.utils.rememberVibrationHandler
 import io.kamel.image.KamelImage
@@ -47,11 +48,16 @@ fun GardenScreen(
     onBack: () -> Unit,
     viewModel: LoginViewModel,
     gardenViewModel: GardenViewModel,
+    languageRepository: LanguageRepository,
     onNavigateToLog: (Planter) -> Unit
 ) {
     val strings = LocalStrings.current
+    val langCode by languageRepository.currentLanguage.collectAsState()
     val myPlanters by gardenViewModel.planters.collectAsState(initial = emptyList())
     val availablePlants by gardenViewModel.availablePlants.collectAsState()
+    
+    // Handler para vibración
+    val vibrationHandler = rememberVibrationHandler()
 
     var showCreateDialog by remember { mutableStateOf(false) }
     var nombrePlanter by remember { mutableStateOf("") }
@@ -81,7 +87,6 @@ fun GardenScreen(
     var showHarvestAnimation by remember { mutableStateOf(false) }
 
     val isHarvestMode = selectedPots.values.any { it }
-    val vibrationHandler = rememberVibrationHandler()
 
     LaunchedEffect(isHarvestMode) {
         tipoAccionSeleccionada = if (isHarvestMode) "Recolectar" else "Plantar"
@@ -102,11 +107,11 @@ fun GardenScreen(
             neighbors.forEach { (nf, nc) ->
                 val neighborPot = currentOccupied.find { it.fila == nf && it.columna == nc }
                 neighborPot?.nombrePlanta?.let { neighborName ->
-                    val neighborPlantData = availablePlants.find { it.nombreComun == neighborName }
-                    val isEnemyOfNew = selectedPlant.plantasEnemigas.any { it.equals(neighborName, ignoreCase = true) }
-                    val isNewEnemyOfNeighbor = neighborPlantData?.plantasEnemigas?.any { it.equals(selectedPlant.nombreComun, ignoreCase = true) } ?: false
-                    if (isEnemyOfNew || isNewEnemyOfNeighbor) {
-                        return strings.gardenConflictText.replace("{0}", selectedPlant.nombreComun).replace("{1}", neighborName)
+                    val isEnemyOfNew = selectedPlant.plantasEnemigas.any { it == neighborName }
+                    if (isEnemyOfNew) {
+                        return strings.gardenConflictText
+                            .replace("{0}", selectedPlant.nombreComun.get(langCode))
+                            .replace("{1}", neighborName.get(langCode))
                     }
                 }
             }
@@ -140,16 +145,13 @@ fun GardenScreen(
             }
         }
     ) { padding ->
-        // SURFACE PARA EVITAR DUPLICADOS VISUALES (OPACIDAD TOTAL)
         Surface(
             modifier = Modifier.fillMaxSize().padding(padding),
             color = MaterialTheme.colorScheme.background
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 if (myPlanters.isEmpty()) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(strings.gardenNoPlanters, color = MaterialTheme.colorScheme.onBackground)
-                    }
+                    Box(Modifier.fillMaxSize(), Alignment.Center) { Text(strings.gardenNoPlanters, color = MaterialTheme.colorScheme.onBackground) }
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
@@ -159,6 +161,7 @@ fun GardenScreen(
                         items(myPlanters) { planter ->
                             PlanterCard(
                                 planter = planter, gardenViewModel = gardenViewModel, selectedPots = selectedPots.keys,
+                                langCode = langCode,
                                 onDelete = { planterToDelete = planter; showDeleteConfirm = true },
                                 onEditName = { planterToEdit = planter; nuevoNombrePlanter = planter.nombre; showEditDialog = true },
                                 onPotClick = { f, c, isOccupied ->
@@ -189,13 +192,7 @@ fun GardenScreen(
         if (showConfirmRemovalDialog) {
             AlertDialog(
                 onDismissRequest = { showConfirmRemovalDialog = false },
-                icon = {
-                    Icon(
-                        imageVector = if(tipoAccionSeleccionada == "Recolectar") Icons.Default.ShoppingBasket else Icons.Default.Warning,
-                        contentDescription = null,
-                        tint = if(tipoAccionSeleccionada == "Recolectar") Color(0xFF4CAF50) else Color.Red
-                    )
-                },
+                icon = { Icon(imageVector = if(tipoAccionSeleccionada == "Recolectar") Icons.Default.ShoppingBasket else Icons.Default.Warning, contentDescription = null, tint = if(tipoAccionSeleccionada == "Recolectar") Color(0xFF4CAF50) else Color.Red) },
                 title = { Text(text = if(tipoAccionSeleccionada == "Recolectar") strings.gardenActionHarvest else strings.gardenActionPullOut, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
                 text = {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
@@ -208,9 +205,8 @@ fun GardenScreen(
                                 val planterId = selectedPots.keys.first().first
                                 val positions = selectedPots.keys.map { it.second to it.third }
                                 gardenViewModel.manageFlowerpots(planterId, positions, null, tipoAccionSeleccionada)
-
-                                // --- AQUI AÑADIMOS LA VIBRACIÓN (200ms) ---
-                                vibrationHandler(200L)
+                                
+                                vibrationHandler(200L) // VIBRACIÓN AL RECOLECTAR/ARRANCAR
 
                                 if (tipoAccionSeleccionada == "Recolectar") showHarvestAnimation = true
                                 showConfirmRemovalDialog = false
@@ -256,12 +252,14 @@ fun GardenScreen(
                 onDismissRequest = { showMultiplePlantersError = false; selectedPots = emptyMap() },
                 icon = { Icon(imageVector = Icons.Default.Info, contentDescription = null, tint = Color(0xFFFF9800)) },
                 title = { Text(strings.gardenMultiplePlantersErrorTitle, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
-                text = { Text(strings.gardenMultiplePlantersErrorText, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
-                confirmButton = {
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                text = {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                        Text(strings.gardenMultiplePlantersErrorText, textAlign = TextAlign.Center)
+                        Spacer(Modifier.height(16.dp))
                         TextButton(onClick = { showMultiplePlantersError = false; selectedPots = emptyMap() }) { Text(strings.gardenOk) }
                     }
-                }
+                },
+                confirmButton = {}
             )
         }
 
@@ -270,12 +268,14 @@ fun GardenScreen(
                 onDismissRequest = { showSelectionError = false; selectedPots = emptyMap() },
                 icon = { Icon(Icons.Default.Info, null) },
                 title = { Text(strings.gardenSelectionErrorTitle, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
-                text = { Text(strings.gardenSelectionErrorText, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
-                confirmButton = {
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                text = {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                        Text(strings.gardenSelectionErrorText, textAlign = TextAlign.Center)
+                        Spacer(Modifier.height(16.dp))
                         TextButton(onClick = { showSelectionError = false; selectedPots = emptyMap() }) { Text(strings.gardenOk) }
                     }
-                }
+                },
+                confirmButton = {}
             )
         }
 
@@ -300,10 +300,10 @@ fun GardenScreen(
                         }
                         if (!isHarvestMode) {
                             Box {
-                                OutlinedTextField(value = selectedPlantForPot?.nombreComun ?: strings.gardenSelectPlant, onValueChange = {}, readOnly = true, modifier = Modifier.fillMaxWidth().clickable { expandedPlantMenu = true }, trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) }, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledBorderColor = MaterialTheme.colorScheme.outline))
+                                OutlinedTextField(value = selectedPlantForPot?.nombreComun?.get(langCode) ?: strings.gardenSelectPlant, onValueChange = {}, readOnly = true, modifier = Modifier.fillMaxWidth().clickable { expandedPlantMenu = true }, trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) }, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledBorderColor = MaterialTheme.colorScheme.outline))
                                 Box(Modifier.matchParentSize().clickable { expandedPlantMenu = true })
                                 DropdownMenu(expanded = expandedPlantMenu, onDismissRequest = { expandedPlantMenu = false }) {
-                                    availablePlants.forEach { plant -> DropdownMenuItem(text = { Text(plant.nombreComun) }, onClick = { selectedPlantForPot = plant; expandedPlantMenu = false }) }
+                                    availablePlants.forEach { plant -> DropdownMenuItem(text = { Text(plant.nombreComun.get(langCode)) }, onClick = { selectedPlantForPot = plant; expandedPlantMenu = false }) }
                                 }
                             }
                         }
@@ -321,8 +321,8 @@ fun GardenScreen(
                                 if (conflict != null) { conflictMessage = conflict; showConflictDialog = true; return@Button }
                             }
                             gardenViewModel.manageFlowerpots(planterId, positions, selectedPlantForPot, tipoAccionSeleccionada)
-
-                            vibrationHandler(50L)
+                            
+                            vibrationHandler(50L) // VIBRACIÓN CORTA AL PLANTAR
 
                             showPlantDialog = false
                             selectedPots = emptyMap()
@@ -388,7 +388,7 @@ fun GardenScreen(
 }
 
 @Composable
-fun PlanterCard(planter: Planter, gardenViewModel: GardenViewModel, selectedPots: Set<Triple<String, Int, Int>>, onDelete: () -> Unit, onEditName: () -> Unit, onPotClick: (Int, Int, Boolean) -> Unit, onLogClick: () -> Unit) {
+fun PlanterCard(planter: Planter, gardenViewModel: GardenViewModel, selectedPots: Set<Triple<String, Int, Int>>, langCode: String, onDelete: () -> Unit, onEditName: () -> Unit, onPotClick: (Int, Int, Boolean) -> Unit, onLogClick: () -> Unit) {
     val strings = LocalStrings.current
     val shareHandler = rememberShareHandler()
     val occupiedPots by gardenViewModel.getFlowerpots(planter.id).collectAsState(initial = emptyList())
@@ -417,7 +417,7 @@ fun PlanterCard(planter: Planter, gardenViewModel: GardenViewModel, selectedPots
                             for (c in 0 until planter.columnas) {
                                 val pot = occupiedPots.find { it.fila == f && it.columna == c }
                                 val itemModifier = if (planter.columnas > 2) Modifier.weight(1f) else Modifier.size(80.dp)
-                                FlowerpotView(pot, selectedPots.contains(Triple(planter.id, f, c)), itemModifier) { onPotClick(f, c, pot != null) }
+                                FlowerpotView(pot, selectedPots.contains(Triple(planter.id, f, c)), langCode, itemModifier) { onPotClick(f, c, pot != null) }
                             }
                         }
                     }
@@ -433,7 +433,7 @@ fun PlanterCard(planter: Planter, gardenViewModel: GardenViewModel, selectedPots
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun FlowerpotView(pot: GardenFlowerpot?, isSelected: Boolean, modifier: Modifier, onClick: () -> Unit) {
+fun FlowerpotView(pot: GardenFlowerpot?, isSelected: Boolean, langCode: String, modifier: Modifier, onClick: () -> Unit) {
     val bgColor = when {
         isSelected -> Color(0xFFFFF176)
         pot == null -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
@@ -455,7 +455,7 @@ fun FlowerpotView(pot: GardenFlowerpot?, isSelected: Boolean, modifier: Modifier
                 Icon(if(isSelected) Icons.Default.Check else Icons.Default.Add, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
             } else {
                 if (!targetPot.imagenUrl.isNullOrBlank()) KamelImage(asyncPainterResource(targetPot.imagenUrl!!), null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize().padding(4.dp).clip(RoundedCornerShape(4.dp)))
-                else Text(targetPot.nombrePlanta?.take(8) ?: "?", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                else Text(targetPot.nombrePlanta?.get(langCode)?.take(8) ?: "?", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Black)
             }
         }
     }

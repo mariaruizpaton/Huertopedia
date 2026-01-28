@@ -3,30 +3,14 @@ package com.mariaruiz.huertopedia.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -35,7 +19,6 @@ import androidx.compose.ui.unit.sp
 import com.mariaruiz.huertopedia.viewmodel.GardenViewModel
 import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
 import com.mariaruiz.huertopedia.i18n.LocalStrings
-// Importamos tu utilidad de fecha
 import com.mariaruiz.huertopedia.utils.toHumanDateTimeString
 
 @Composable
@@ -50,8 +33,6 @@ fun HomeScreen(
 ) {
     var showMenu by remember { mutableStateOf(false) }
     val strings = LocalStrings.current
-
-    // Observamos la última actividad del ViewModel
     val lastActivity by gardenViewModel.globalLastActivity.collectAsState(initial = null)
 
     Scaffold(
@@ -80,6 +61,7 @@ fun HomeScreen(
                     ) {
                         DropdownMenuItem(
                             text = { Text(strings.viewProfile) },
+                            leadingIcon = { Icon(Icons.Default.Person, null) },
                             onClick = {
                                 showMenu = false
                                 navigateToProfile()
@@ -87,7 +69,8 @@ fun HomeScreen(
                         )
 
                         DropdownMenuItem(
-                            text = { Text("Acerca de") },
+                            text = { Text(strings.aboutTitle) },
+                            leadingIcon = { Icon(Icons.Default.Info, null) }, // Icono temporal
                             onClick = {
                                 showMenu = false
                                 navigateToAbout()
@@ -157,13 +140,10 @@ fun HomeScreen(
                 shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.surface
             ) {
-                // Usamos tus utilidades para formatear la fecha/hora
                 val activityText = if (lastActivity != null) {
                     val tipo = lastActivity?.eventType ?: "Actividad"
                     val desc = lastActivity?.notes?.take(20) ?: ""
-                    // AQUÍ ESTÁ EL CAMBIO: Usamos tu DateUtils
                     val fechaStr = lastActivity!!.timestamp.toHumanDateTimeString()
-
                     "$tipo: $desc ($fechaStr)"
                 } else {
                     "No hay actividad reciente"

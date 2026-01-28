@@ -22,6 +22,7 @@ import com.mariaruiz.huertopedia.model.Plant
 import com.mariaruiz.huertopedia.utils.BackHandler
 import com.mariaruiz.huertopedia.viewmodel.WikiViewModel
 import com.mariaruiz.huertopedia.i18n.LocalStrings
+import com.mariaruiz.huertopedia.repositories.LanguageRepository
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 
@@ -29,16 +30,20 @@ import io.kamel.image.asyncPainterResource
 @Composable
 fun WikiScreen(
     onBack: () -> Unit,
-    wikiViewModel: WikiViewModel = remember { WikiViewModel() },
+    wikiViewModel: WikiViewModel,
+    languageRepository: LanguageRepository,
     onPlantClick: (Plant) -> Unit
 ) {
     val strings = LocalStrings.current
+    val currentLangCode by languageRepository.currentLanguage.collectAsState()
+    
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("Todo") }
     val plants by wikiViewModel.plants.collectAsState()
 
-    LaunchedEffect(searchQuery, selectedFilter) {
-        wikiViewModel.filterPlants(searchQuery, selectedFilter)
+    // Actualizamos el filtrado cuando cambia el texto, la categoría O el idioma
+    LaunchedEffect(searchQuery, selectedFilter, currentLangCode) {
+        wikiViewModel.filterPlants(searchQuery, selectedFilter, currentLangCode)
     }
 
     BackHandler {
@@ -99,7 +104,11 @@ fun WikiScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(plants) { plant ->
-                    PlantCard(plant, onClick = { onPlantClick(plant) })
+                    PlantCard(
+                        plant = plant, 
+                        langCode = currentLangCode, 
+                        onClick = { onPlantClick(plant) }
+                    )
                 }
             }
         }
@@ -108,7 +117,7 @@ fun WikiScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlantCard(plant: Plant, onClick: () -> Unit) {
+fun PlantCard(plant: Plant, langCode: String, onClick: () -> Unit) {
     val strings = LocalStrings.current
     Card(
         modifier = Modifier
@@ -132,7 +141,7 @@ fun PlantCard(plant: Plant, onClick: () -> Unit) {
             if (!plant.imagenUrl.isNullOrBlank()) {
                 KamelImage(
                     resource = asyncPainterResource(data = plant.imagenUrl),
-                    contentDescription = plant.nombreComun,
+                    contentDescription = plant.nombreComun.get(langCode),
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(100.dp)
@@ -164,7 +173,7 @@ fun PlantCard(plant: Plant, onClick: () -> Unit) {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = plant.nombreComun,
+                text = plant.nombreComun.get(langCode),
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -172,7 +181,7 @@ fun PlantCard(plant: Plant, onClick: () -> Unit) {
             )
 
             Text(
-                text = plant.categoria,
+                text = plant.categoria.get(langCode),
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant

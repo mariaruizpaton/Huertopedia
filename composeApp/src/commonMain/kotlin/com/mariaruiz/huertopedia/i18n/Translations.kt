@@ -31,6 +31,15 @@ interface AppStrings {
     val wikiTitle: String
     val viewProfile: String
 
+    // About Screen
+    val aboutTitle: String
+    val aboutDescription: String
+    val aboutVersion: String
+    val aboutDeveloper: String
+    val aboutSourceCode: String
+    val aboutPrivacyPolicy: String
+    val aboutCopyright: String
+
     // Wiki
     val wikiCategoryAll: String
     val wikiCategoryVegetables: String
@@ -172,6 +181,14 @@ object EnStrings : AppStrings {
     override val wikiTitle = "Wiki"
     override val viewProfile = "View profile"
 
+    override val aboutTitle = "About Huertopedia"
+    override val aboutDescription = "Your digital companion for urban gardening. Learn, plant, and grow your own food."
+    override val aboutVersion = "Version 1.0.0"
+    override val aboutDeveloper = "Developed by"
+    override val aboutSourceCode = "View Source Code on GitHub"
+    override val aboutPrivacyPolicy = "Privacy Policy"
+    override val aboutCopyright = "© 2026 Huertopedia. All rights reserved."
+
     override val wikiCategoryAll = "All"
     override val wikiCategoryVegetables = "Vegetables"
     override val wikiCategoryFruits = "Fruits"
@@ -304,6 +321,14 @@ object EsStrings : AppStrings {
     override val searchPlaceholder = "Buscar plantas..."
     override val wikiTitle = "Wiki"
     override val viewProfile = "Ver perfil"
+
+    override val aboutTitle = "Acerca de Huertopedia"
+    override val aboutDescription = "Tu compañero digital para el huerto urbano. Aprende, planta y cultiva tus propios alimentos."
+    override val aboutVersion = "Versión 1.0.0"
+    override val aboutDeveloper = "Desarrollado por"
+    override val aboutSourceCode = "Ver Código Fuente en GitHub"
+    override val aboutPrivacyPolicy = "Política de Privacidad"
+    override val aboutCopyright = "© 2026 Huertopedia. Todos los derechos reservados."
 
     override val wikiCategoryAll = "Todo"
     override val wikiCategoryVegetables = "Hortalizas"

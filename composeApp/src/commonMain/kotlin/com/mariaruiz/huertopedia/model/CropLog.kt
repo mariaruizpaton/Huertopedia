@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 data class CropLog(
     val id: String = "",
     val planterId: String,
+    val userId: String = "",
     val timestamp: Long,
     val eventType: String,
     val notes: String? = null,

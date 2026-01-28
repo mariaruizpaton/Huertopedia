@@ -125,13 +125,14 @@ fun App(
                             navigateToGardenManagement = { currentScreen.value = Screen.GardenManagement },
                             navigateToWiki = { currentScreen.value = Screen.Wiki },
                             navigateToProfile = { currentScreen.value = Screen.User },
-                            navigateToAbout = { currentScreen.value = Screen.About}
+                            navigateToAbout = { currentScreen.value = Screen.About }
                         )
                     }
                     Screen.Wiki -> {
                         WikiScreen(
                             onBack = { currentScreen.value = Screen.Home },
                             wikiViewModel = wikiViewModel,
+                            languageRepository = languageRepository,
                             onPlantClick = { plant ->
                                 selectedPlant.value = plant
                                 currentScreen.value = Screen.PlantDetail
@@ -143,6 +144,7 @@ fun App(
                             onBack = { currentScreen.value = Screen.Home },
                             viewModel = viewModel,
                             gardenViewModel = gardenViewModel,
+                            languageRepository = languageRepository,
                             onNavigateToLog = { planter ->
                                 selectedPlanter.value = planter
                                 currentScreen.value = Screen.CropLog
@@ -153,6 +155,7 @@ fun App(
                         selectedPlant.value?.let { plant ->
                             PlantDetailScreen(
                                 plant = plant,
+                                languageRepository = languageRepository,
                                 onBack = { currentScreen.value = Screen.Wiki }
                             )
                         }

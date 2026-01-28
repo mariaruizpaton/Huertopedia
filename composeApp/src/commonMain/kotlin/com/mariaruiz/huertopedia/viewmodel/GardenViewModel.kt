@@ -12,8 +12,6 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import com.mariaruiz.huertopedia.utils.getCurrentTimeMillis
 import com.mariaruiz.huertopedia.utils.toFirebaseData
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
 
 class GardenViewModel : ViewModel() {
     private val auth = Firebase.auth
@@ -26,18 +24,15 @@ class GardenViewModel : ViewModel() {
     private val _planters = MutableStateFlow<List<Planter>>(emptyList())
     val planters = _planters.asStateFlow()
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     val globalLastActivity: Flow<CropLog?> = planters.flatMapLatest { plantersList ->
         if (plantersList.isEmpty()) {
             flowOf(null)
         } else {
-            // Creamos una lista de flujos (uno por cada jardinera)
+            // Combinamos los flujos de logs de cada jardinera
             val logsFlows = plantersList.map { observeCropLogs(it.id) }
-
-            // Combinamos todos los flujos en uno solo
             combine(logsFlows) { logsArray ->
-                // logsArray contiene varias listas de logs. Las aplanamos en una sola lista.
                 logsArray.flatMap { it }
-                    // Ordenamos para obtener el más reciente por fecha (asumiendo que CropLog tiene un campo 'fecha')
                     .maxByOrNull { it.timestamp }
             }
         }
@@ -93,14 +88,11 @@ class GardenViewModel : ViewModel() {
         val uid = auth.currentUser?.uid ?: return
         viewModelScope.launch {
             try {
-                // OBTENER URL DE DESCARGA SI ES NECESARIO
                 var urlPublica = planta?.imagenUrl
                 if (urlPublica != null && !urlPublica.startsWith("http")) {
                     try {
                         urlPublica = storage.reference(urlPublica).getDownloadUrl()
-                    } catch (e: Exception) {
-                        println("Error obteniendo URL para maceta: ${e.message}")
-                    }
+                    } catch (e: Exception) { }
                 }
 
                 positions.forEach { (f, c) ->
@@ -115,8 +107,9 @@ class GardenViewModel : ViewModel() {
                         val flowerpot = GardenFlowerpot(
                             id = potId, planterId = planterId,
                             fila = f, columna = c,
-                            plantaId = planta?.id, nombrePlanta = planta?.nombreComun,
-                            imagenUrl = urlPublica, // Guardamos la URL pública
+                            plantaId = planta?.id, 
+                            nombrePlanta = planta?.nombreComun, // Objeto LocalizedText
+                            imagenUrl = urlPublica, 
                             fechaSiembra = clockNow(),
                             tipoAccion = accion
                         )
@@ -142,7 +135,6 @@ class GardenViewModel : ViewModel() {
         }
     }
 
-    // --- FUNCIONES DEL DIARIO (CROP LOG) ---
     @OptIn(ExperimentalCoroutinesApi::class)
     fun observeCropLogs(planterId: String): Flow<List<CropLog>> {
         return auth.authStateChanged.flatMapLatest { user ->
@@ -150,7 +142,7 @@ class GardenViewModel : ViewModel() {
             if (uid != null && planterId.isNotBlank()) {
                 db.collection("usuario").document(uid)
                     .collection("planters").document(planterId)
-                    .collection("crop_log")
+                    .collection("croplogs") // Unificado a plural
                     .snapshots()
                     .map { snapshot ->
                         snapshot.documents.mapNotNull { doc ->
@@ -167,17 +159,17 @@ class GardenViewModel : ViewModel() {
         val uid = auth.currentUser?.uid ?: return
         viewModelScope.launch {
             try {
-                var finalLog = log
+                var finalLog = log.copy(userId = uid) 
                 if (imageBytes != null) {
                     val path = "logs/${uid}_${getCurrentTimeMillis()}.jpg"
                     val ref = storage.reference.child(path)
                     ref.putData(imageBytes.toFirebaseData())
                     val url = ref.getDownloadUrl()
-                    finalLog = log.copy(photoPath = url)
+                    finalLog = finalLog.copy(photoPath = url)
                 }
                 db.collection("usuario").document(uid)
                     .collection("planters").document(log.planterId)
-                    .collection("crop_log").add(finalLog)
+                    .collection("croplogs").add(finalLog)
             } catch (e: Exception) {}
         }
     }
@@ -188,7 +180,7 @@ class GardenViewModel : ViewModel() {
             try {
                 db.collection("usuario").document(uid)
                     .collection("planters").document(planterId)
-                    .collection("crop_logs").document(logId).delete()
+                    .collection("croplogs").document(logId).delete()
             } catch (e: Exception) {}
         }
     }
@@ -197,22 +189,24 @@ class GardenViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val snapshot = db.collection("plantas").get()
-                val plants = snapshot.documents.map { doc ->
-                    Plant(
-                        id = doc.id,
-                        nombreComun = doc.get<String>("nombre_comun") ?: "",
-                        nombreCientifico = doc.get<String>("nombre_cientifico") ?: "",
-                        categoria = doc.get<String>("categoria") ?: "", 
-                        imagenUrl = doc.get<String>("imagen_url"),
-                        siembra = doc.get<String>("siembra") ?: "",
-                        recoleccion = doc.get<String>("recoleccion") ?: "",
-                        temperaturaOptima = doc.get<String>("temperatura_optima") ?: "",
-                        riego = doc.get<String>("riego") ?: "",
-                        abono = doc.get<String>("abono") ?: "",
-                        cuidados = doc.get<String>("cuidados") ?: "",
-                        plantasAmigables = doc.get<List<String>>("plantas_amigables") ?: emptyList(),
-                        plantasEnemigas = doc.get<List<String>>("plantas_enemigas") ?: emptyList()
-                    )
+                val plants = snapshot.documents.mapNotNull { doc ->
+                    try {
+                        Plant(
+                            id = doc.id,
+                            nombreComun = doc.get<LocalizedText>("nombre_comun"),
+                            nombreCientifico = doc.get<String>("nombre_cientifico") ?: "",
+                            categoria = doc.get<LocalizedText>("categoria"), 
+                            imagenUrl = doc.get<String>("imagen_url"),
+                            siembra = doc.get<LocalizedText>("siembra"),
+                            recoleccion = doc.get<LocalizedText>("recoleccion"),
+                            temperaturaOptima = doc.get<String>("temperatura_optima") ?: "",
+                            riego = doc.get<LocalizedText>("riego"),
+                            abono = doc.get<LocalizedText>("abono"),
+                            cuidados = doc.get<LocalizedText>("cuidados"),
+                            plantasAmigables = doc.get<List<LocalizedText>>("plantas_amigables"),
+                            plantasEnemigas = doc.get<List<LocalizedText>>("plantas_enemigas")
+                        )
+                    } catch (e: Exception) { null }
                 }
                 _availablePlants.value = plants
             } catch (e: Exception) {}
