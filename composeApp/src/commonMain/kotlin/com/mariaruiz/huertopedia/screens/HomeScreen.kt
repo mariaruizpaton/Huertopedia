@@ -33,6 +33,9 @@ fun HomeScreen(
 ) {
     var showMenu by remember { mutableStateOf(false) }
     val strings = LocalStrings.current
+    val langCode = strings.changeLanguage.takeLast(2).lowercase() // Obtenemos "es" o "en"
+
+    // Observamos la última actividad del ViewModel
     val lastActivity by gardenViewModel.globalLastActivity.collectAsState(initial = null)
 
     Scaffold(
@@ -70,7 +73,7 @@ fun HomeScreen(
 
                         DropdownMenuItem(
                             text = { Text(strings.aboutTitle) },
-                            leadingIcon = { Icon(Icons.Default.Info, null) }, // Icono temporal
+                            leadingIcon = { Icon(Icons.Default.Info, null) },
                             onClick = {
                                 showMenu = false
                                 navigateToAbout()
@@ -140,10 +143,12 @@ fun HomeScreen(
                 shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.surface
             ) {
+                // Usamos tus utilidades para formatear la fecha/hora
                 val activityText = if (lastActivity != null) {
-                    val tipo = lastActivity?.eventType ?: "Actividad"
-                    val desc = lastActivity?.notes?.take(20) ?: ""
+                    val tipo = lastActivity?.eventType?.get(langCode) ?: "Actividad"
+                    val desc = lastActivity?.notes?.get(langCode)?.take(20) ?: ""
                     val fechaStr = lastActivity!!.timestamp.toHumanDateTimeString()
+
                     "$tipo: $desc ($fechaStr)"
                 } else {
                     "No hay actividad reciente"

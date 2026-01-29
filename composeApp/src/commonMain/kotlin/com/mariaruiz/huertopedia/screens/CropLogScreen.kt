@@ -29,6 +29,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.mariaruiz.huertopedia.i18n.AppStrings
 import com.mariaruiz.huertopedia.i18n.LocalStrings
 import com.mariaruiz.huertopedia.model.CropLog
+import com.mariaruiz.huertopedia.model.LocalizedText
 import com.mariaruiz.huertopedia.model.Planter
 import com.mariaruiz.huertopedia.utils.BackHandler
 import com.mariaruiz.huertopedia.utils.getCurrentTimeMillis
@@ -52,6 +53,7 @@ fun CropLogScreen(
     gardenViewModel: GardenViewModel
 ) {
     val strings = LocalStrings.current
+    val langCode = strings.changeLanguage.takeLast(2).lowercase()
     val cropLogs by gardenViewModel.observeCropLogs(planter.id).collectAsState(initial = emptyList())
 
     var showAddDialog by remember { mutableStateOf(false) }
@@ -59,48 +61,46 @@ fun CropLogScreen(
     var logToDelete by remember { mutableStateOf<CropLog?>(null) }
     var selectedImageUrl by remember { mutableStateOf<String?>(null) }
 
-    val eventTypes = listOf(
-        strings.eventNotes,
-        strings.eventIrrigation,
-        strings.eventGermination,
-        strings.eventDisease,
-        strings.eventFertilization,
-        strings.eventTrellising,
-        strings.eventWeeding
-    )
+    val eventTypesMap = remember {
+        listOf(
+            strings.eventNotes to LocalizedText("Notas", "Notes"),
+            strings.eventIrrigation to LocalizedText("Riego", "Irrigation"),
+            strings.eventGermination to LocalizedText("Germinación", "Germination"),
+            strings.eventDisease to LocalizedText("Enfermedad", "Disease"),
+            strings.eventFertilization to LocalizedText("Fertilización", "Fertilization"),
+            strings.eventTrellising to LocalizedText("Entutorado", "Trellising"),
+            strings.eventWeeding to LocalizedText("Eliminación adventicias", "Weeding")
+        )
+    }
 
-    var selectedEventType by remember { mutableStateOf(eventTypes[0]) }
+    var selectedEventTypePair by remember { mutableStateOf(eventTypesMap[0]) }
     var expandedEventType by remember { mutableStateOf(false) }
     var notesContent by remember { mutableStateOf("") }
-    var irrigationType by remember { mutableStateOf(strings.irrigationManual) }
+    
+    val irrigationTypesMap = remember {
+        listOf(
+            strings.irrigationManual to LocalizedText("Manual", "Manual"),
+            strings.irrigationDrip to LocalizedText("Goteo", "Drip"),
+            strings.irrigationRain to LocalizedText("Lluvia", "Rain")
+        )
+    }
+    var selectedIrrigationPair by remember { mutableStateOf(irrigationTypesMap[0]) }
     var irrigationMinutes by remember { mutableFloatStateOf(10f) }
     var selectedImageBytes by remember { mutableStateOf<ByteArray?>(null) }
 
-    val imagePicker = rememberImagePicker { bytes -> selectedImageBytes = bytes }
+    val scope = rememberCoroutineScope()
     val factory = rememberPermissionsControllerFactory()
     val controller = remember(factory) { factory.createPermissionsController() }
     BindEffect(controller)
-    val scope = rememberCoroutineScope()
     val cameraLauncher = rememberCameraLauncher { bytes -> selectedImageBytes = bytes }
 
     BackHandler { onBack() }
 
     if (selectedImageUrl != null) {
-        Dialog(
-            onDismissRequest = { selectedImageUrl = null },
-            properties = DialogProperties(usePlatformDefaultWidth = false)
-        ) {
+        Dialog(onDismissRequest = { selectedImageUrl = null }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
             Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-                KamelImage(
-                    resource = asyncPainterResource(selectedImageUrl!!),
-                    contentDescription = null,
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier.fillMaxSize().clickable { selectedImageUrl = null }
-                )
-                IconButton(
-                    onClick = { selectedImageUrl = null },
-                    modifier = Modifier.align(Alignment.TopEnd).padding(16.dp).background(Color.Black.copy(alpha = 0.5f), CircleShape)
-                ) {
+                KamelImage(resource = asyncPainterResource(selectedImageUrl!!), contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().clickable { selectedImageUrl = null })
+                IconButton(onClick = { selectedImageUrl = null }, modifier = Modifier.align(Alignment.TopEnd).padding(16.dp).background(Color.Black.copy(alpha = 0.5f), CircleShape)) {
                     Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = Color.White)
                 }
             }
@@ -116,23 +116,12 @@ fun CropLogScreen(
                         Text(planter.nombre, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
                     }
                 },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings.detailBack)
-                    }
-                },
-                colors = TopAppBarDefaults.largeTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer
-                )
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings.detailBack) } },
+                colors = TopAppBarDefaults.largeTopAppBarColors(containerColor = MaterialTheme.colorScheme.surface, scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer)
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showAddDialog = true },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
+            FloatingActionButton(onClick = { showAddDialog = true }, containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary) {
                 Icon(Icons.Default.Add, contentDescription = strings.cropLogAddEntry)
             }
         },
@@ -144,85 +133,57 @@ fun CropLogScreen(
                 icon = { Icon(Icons.Default.EditCalendar, contentDescription = null) },
                 title = { Text(strings.cropLogNewEntry, textAlign = androidx.compose.ui.text.style.TextAlign.Center) },
                 text = {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
+                    Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         ExposedDropdownMenuBox(expanded = expandedEventType, onExpandedChange = { expandedEventType = !expandedEventType }) {
                             OutlinedTextField(
-                                value = selectedEventType,
-                                onValueChange = {},
-                                readOnly = true,
+                                value = selectedEventTypePair.first,
+                                onValueChange = {}, readOnly = true,
                                 label = { Text(strings.cropLogEventType) },
-                                leadingIcon = { Icon(getEventIcon(selectedEventType, strings), contentDescription = null) },
+                                leadingIcon = { Icon(getEventIcon(selectedEventTypePair.second.es), contentDescription = null) },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedEventType) },
                                 modifier = Modifier.menuAnchor().fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp)
                             )
                             ExposedDropdownMenu(expanded = expandedEventType, onDismissRequest = { expandedEventType = false }) {
-                                eventTypes.forEach { type ->
+                                eventTypesMap.forEach { pair ->
                                     DropdownMenuItem(
-                                        text = { Text(type) },
-                                        leadingIcon = { Icon(getEventIcon(type, strings), null, tint = getEventColor(type, strings)) },
-                                        onClick = {
-                                            selectedEventType = type
-                                            expandedEventType = false
-                                        }
+                                        text = { Text(pair.first) },
+                                        leadingIcon = { Icon(getEventIcon(pair.second.es), null, tint = getEventColor(pair.second.es)) },
+                                        onClick = { selectedEventTypePair = pair; expandedEventType = false }
                                     )
                                 }
                             }
                         }
+                        
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                        when (selectedEventType) {
-                            strings.eventIrrigation -> {
-                                Text(strings.cropLogIrrigationMethod, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
-                                    listOf(strings.irrigationManual, strings.irrigationDrip, strings.irrigationRain).forEach { type ->
-                                        FilterChip(
-                                            selected = irrigationType == type,
-                                            onClick = { irrigationType = type },
-                                            label = { Text(type) },
-                                            leadingIcon = { if (irrigationType == type) Icon(Icons.Default.Check, null) }
-                                        )
-                                    }
-                                }
-                                Text("${irrigationMinutes.roundToInt()} min", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
-                                Slider(value = irrigationMinutes, onValueChange = { irrigationMinutes = it }, valueRange = 0f..60f, steps = 11)
-                            }
-                            else -> {
-                                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                    OutlinedTextField(
-                                        value = notesContent,
-                                        onValueChange = { notesContent = it },
-                                        label = { Text(strings.cropLogWriteNotes) },
-                                        modifier = Modifier.fillMaxWidth().height(120.dp),
-                                        maxLines = 5,
-                                        shape = RoundedCornerShape(12.dp)
+                        
+                        if (selectedEventTypePair.first == strings.eventIrrigation) {
+                            Text(strings.cropLogIrrigationMethod, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                                irrigationTypesMap.forEach { pair ->
+                                    FilterChip(
+                                        selected = selectedIrrigationPair == pair,
+                                        onClick = { selectedIrrigationPair = pair },
+                                        label = { Text(pair.first) },
+                                        leadingIcon = { if (selectedIrrigationPair == pair) Icon(Icons.Default.Check, null) }
                                     )
-                                    if (selectedEventType == strings.eventNotes || selectedEventType == strings.eventDisease) {
-                                        OutlinedButton(
-                                            onClick = {
-                                                scope.launch {
-                                                    try {
-                                                        controller.providePermission(Permission.CAMERA)
-                                                        cameraLauncher.capture()
-                                                    } catch (e: Exception) {
-                                                        e.printStackTrace()
-                                                    }
-                                                }
-                                            },
-                                            modifier = Modifier.fillMaxWidth(),
-                                            shape = RoundedCornerShape(12.dp)
-                                        ) {
-                                            if (selectedImageBytes != null) {
-                                                Icon(Icons.Default.Check, null, tint = MaterialTheme.colorScheme.primary)
-                                                Spacer(Modifier.width(8.dp))
-                                                Text("Foto adjuntada")
-                                            } else {
-                                                Icon(Icons.Default.PhotoCamera, null)
-                                                Spacer(Modifier.width(8.dp))
-                                                Text(strings.cropLogAddPhoto)
-                                            }
+                                }
+                            }
+                            Text("${irrigationMinutes.roundToInt()} min", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                            Slider(value = irrigationMinutes, onValueChange = { irrigationMinutes = it }, valueRange = 0f..60f, steps = 11)
+                        } else {
+                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                OutlinedTextField(value = notesContent, onValueChange = { notesContent = it }, label = { Text(strings.cropLogWriteNotes) }, modifier = Modifier.fillMaxWidth().height(120.dp), maxLines = 5, shape = RoundedCornerShape(12.dp))
+                                if (selectedEventTypePair.first == strings.eventNotes || selectedEventTypePair.first == strings.eventDisease) {
+                                    OutlinedButton(onClick = { scope.launch { try { controller.providePermission(Permission.CAMERA); cameraLauncher.capture() } catch (e: Exception) { e.printStackTrace() } } }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+                                        if (selectedImageBytes != null) {
+                                            Icon(Icons.Default.Check, null, tint = MaterialTheme.colorScheme.primary)
+                                            Spacer(Modifier.width(8.dp))
+                                            Text("Foto adjuntada")
+                                        } else {
+                                            Icon(Icons.Default.PhotoCamera, null)
+                                            Spacer(Modifier.width(8.dp))
+                                            Text(strings.cropLogAddPhoto)
                                         }
                                     }
                                 }
@@ -232,34 +193,39 @@ fun CropLogScreen(
                 },
                 confirmButton = {
                     Button(onClick = {
-                        val noteForLog = if (selectedEventType == strings.eventIrrigation) {
-                            "$irrigationType, ${irrigationMinutes.roundToInt()} min"
+                        val isIrrigation = selectedEventTypePair.first == strings.eventIrrigation
+                        val finalNotes = if (isIrrigation) {
+                            val mins = irrigationMinutes.roundToInt()
+                            LocalizedText(
+                                es = "${selectedIrrigationPair.second.es}, $mins min",
+                                en = "${selectedIrrigationPair.second.en}, $mins min"
+                            )
                         } else {
-                            notesContent.takeIf { it.isNotBlank() }
+                            LocalizedText(es = notesContent, en = notesContent)
                         }
+                        
                         val newLog = CropLog(
                             planterId = planter.id,
                             timestamp = getCurrentTimeMillis(),
-                            eventType = selectedEventType,
-                            notes = noteForLog,
-                            irrigationType = irrigationType.takeIf { selectedEventType == strings.eventIrrigation },
-                            irrigationMinutes = irrigationMinutes.roundToInt().takeIf { selectedEventType == strings.eventIrrigation },
+                            eventType = selectedEventTypePair.second,
+                            notes = finalNotes,
+                            irrigationType = if(isIrrigation) selectedIrrigationPair.second else null,
+                            irrigationMinutes = if(isIrrigation) irrigationMinutes.roundToInt() else null,
                             photoPath = null
                         )
                         gardenViewModel.addCropLogEntry(newLog, selectedImageBytes)
                         showAddDialog = false
                         notesContent = ""
                         selectedImageBytes = null
-                        selectedEventType = eventTypes[0]
-                        irrigationType = strings.irrigationManual
+                        selectedEventTypePair = eventTypesMap[0]
+                        selectedIrrigationPair = irrigationTypesMap[0]
                         irrigationMinutes = 10f
                     }) { Text(strings.gardenSave) }
                 },
-                dismissButton = {
-                    TextButton(onClick = { showAddDialog = false; selectedImageBytes = null }) { Text(strings.gardenCancel) }
-                }
+                dismissButton = { TextButton(onClick = { showAddDialog = false; selectedImageBytes = null }) { Text(strings.gardenCancel) } }
             )
         }
+        
         if (showDeleteDialog) {
             AlertDialog(
                 onDismissRequest = { showDeleteDialog = false },
@@ -267,10 +233,7 @@ fun CropLogScreen(
                 title = { Text(strings.cropLogDeleteEntryTitle) },
                 text = { Text(strings.cropLogDeleteEntry) },
                 confirmButton = {
-                    Button(onClick = {
-                        logToDelete?.let { gardenViewModel.deleteCropLogEntry(it.planterId, it.id) }
-                        showDeleteDialog = false
-                    }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) { Text(strings.gardenDelete) }
+                    Button(onClick = { logToDelete?.let { gardenViewModel.deleteCropLogEntry(it.planterId, it.id) }; showDeleteDialog = false }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) { Text(strings.gardenDelete) }
                 },
                 dismissButton = { TextButton(onClick = { showDeleteDialog = false }) { Text(strings.gardenCancel) } }
             )
@@ -285,13 +248,9 @@ fun CropLogScreen(
                 }
             }
         } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentPadding = PaddingValues(bottom = 80.dp)
-            ) {
-                val sortedLogs = cropLogs.sortedByDescending { it.timestamp }
-                items(sortedLogs) { log ->
-                    TimelineItem(log = log, strings = strings, onDeleteClick = { logToDelete = log; showDeleteDialog = true }, onImageClick = { url -> selectedImageUrl = url })
+            LazyColumn(modifier = Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(bottom = 80.dp)) {
+                items(cropLogs.sortedByDescending { it.timestamp }) { log ->
+                    TimelineItem(log = log, langCode = langCode, onDeleteClick = { logToDelete = log; showDeleteDialog = true }, onImageClick = { url -> selectedImageUrl = url })
                 }
             }
         }
@@ -299,9 +258,11 @@ fun CropLogScreen(
 }
 
 @Composable
-fun TimelineItem(log: CropLog, strings: AppStrings, onDeleteClick: () -> Unit, onImageClick: (String) -> Unit) {
-    val eventColor = getEventColor(log.eventType, strings)
-    val eventIcon = getEventIcon(log.eventType, strings)
+fun TimelineItem(log: CropLog, langCode: String, onDeleteClick: () -> Unit, onImageClick: (String) -> Unit) {
+    val eventName = log.eventType.get(langCode)
+    val eventColor = getEventColor(log.eventType.es)
+    val eventIcon = getEventIcon(log.eventType.es)
+    
     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(IntrinsicSize.Min)) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(40.dp)) {
             Box(modifier = Modifier.width(2.dp).weight(1f).background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)))
@@ -314,16 +275,19 @@ fun TimelineItem(log: CropLog, strings: AppStrings, onDeleteClick: () -> Unit, o
         Card(modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = log.eventType, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                    Text(text = eventName, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                     Text(text = log.timestamp.toHumanDateString(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                 }
                 Spacer(modifier = Modifier.height(4.dp))
-                if (!log.notes.isNullOrBlank()) {
-                    Text(text = log.notes, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(modifier = Modifier.height(8.dp))
+                if (log.notes != null) {
+                    val noteText = log.notes.get(langCode)
+                    if (noteText.isNotBlank()) {
+                        Text(text = noteText, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
                 }
                 if (log.photoPath != null) {
-                    KamelImage(resource = asyncPainterResource(log.photoPath), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(8.dp)).border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp)).clickable { onImageClick(log.photoPath) })
+                    KamelImage(resource = asyncPainterResource(log.photoPath!!), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(8.dp)).border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp)).clickable { onImageClick(log.photoPath!!) })
                     Spacer(modifier = Modifier.height(8.dp))
                 }
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
@@ -336,28 +300,26 @@ fun TimelineItem(log: CropLog, strings: AppStrings, onDeleteClick: () -> Unit, o
     }
 }
 
-@Composable
-fun getEventColor(eventType: String, strings: AppStrings): Color {
-    return when (eventType) {
-        strings.eventIrrigation -> Color(0xFF2196F3)
-        strings.eventDisease -> Color(0xFFF44336)
-        strings.eventFertilization -> Color(0xFF795548)
-        strings.eventGermination -> Color(0xFF4CAF50)
-        strings.eventWeeding -> Color(0xFF8BC34A)
-        strings.eventTrellising -> Color(0xFFFF9800)
+fun getEventColor(eventEs: String): Color {
+    return when (eventEs) {
+        "Riego" -> Color(0xFF2196F3)
+        "Enfermedad" -> Color(0xFFF44336)
+        "Fertilización" -> Color(0xFF795548)
+        "Germinación" -> Color(0xFF4CAF50)
+        "Eliminación adventicias" -> Color(0xFF8BC34A)
+        "Entutorado" -> Color(0xFFFF9800)
         else -> Color(0xFF9E9E9E)
     }
 }
 
-@Composable
-fun getEventIcon(eventType: String, strings: AppStrings): ImageVector {
-    return when (eventType) {
-        strings.eventIrrigation -> Icons.Default.WaterDrop
-        strings.eventDisease -> Icons.Default.BugReport
-        strings.eventFertilization -> Icons.Default.Yard
-        strings.eventGermination -> Icons.Default.Spa
-        strings.eventWeeding -> Icons.Default.ContentCut
-        strings.eventTrellising -> Icons.Default.Height
+fun getEventIcon(eventEs: String): ImageVector {
+    return when (eventEs) {
+        "Riego" -> Icons.Default.WaterDrop
+        "Enfermedad" -> Icons.Default.BugReport
+        "Fertilización" -> Icons.Default.Yard
+        "Germinación" -> Icons.Default.Spa
+        "Eliminación adventicias" -> Icons.Default.ContentCut
+        "Entutorado" -> Icons.Default.Height
         else -> Icons.Default.EditNote
     }
 }

@@ -12,5 +12,5 @@ data class GardenFlowerpot(
     val nombrePlanta: LocalizedText? = null,
     val imagenUrl: String? = null, 
     val fechaSiembra: Long? = null,
-    val tipoAccion: String? = null 
+    val tipoAccion: LocalizedText? = null // CORREGIDO
 )

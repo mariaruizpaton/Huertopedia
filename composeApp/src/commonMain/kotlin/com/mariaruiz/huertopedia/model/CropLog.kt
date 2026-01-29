@@ -8,9 +8,9 @@ data class CropLog(
     val planterId: String,
     val userId: String = "",
     val timestamp: Long,
-    val eventType: String,
-    val notes: String? = null,
-    val irrigationType: String? = null,
+    val eventType: LocalizedText,
+    val notes: LocalizedText? = null, // <--- CAMBIADO A LocalizedText
+    val irrigationType: LocalizedText? = null,
     val irrigationMinutes: Int? = null,
     val photoPath: String? = null
 )

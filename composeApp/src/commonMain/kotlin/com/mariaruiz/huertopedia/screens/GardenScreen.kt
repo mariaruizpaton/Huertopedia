@@ -56,7 +56,6 @@ fun GardenScreen(
     val myPlanters by gardenViewModel.planters.collectAsState(initial = emptyList())
     val availablePlants by gardenViewModel.availablePlants.collectAsState()
     
-    // Handler para vibración
     val vibrationHandler = rememberVibrationHandler()
 
     var showCreateDialog by remember { mutableStateOf(false) }
@@ -188,7 +187,6 @@ fun GardenScreen(
             }
         }
 
-        // --- DIÁLOGOS ---
         if (showConfirmRemovalDialog) {
             AlertDialog(
                 onDismissRequest = { showConfirmRemovalDialog = false },
@@ -205,9 +203,7 @@ fun GardenScreen(
                                 val planterId = selectedPots.keys.first().first
                                 val positions = selectedPots.keys.map { it.second to it.third }
                                 gardenViewModel.manageFlowerpots(planterId, positions, null, tipoAccionSeleccionada)
-                                
-                                vibrationHandler(200L) // VIBRACIÓN AL RECOLECTAR/ARRANCAR
-
+                                vibrationHandler(200L)
                                 if (tipoAccionSeleccionada == "Recolectar") showHarvestAnimation = true
                                 showConfirmRemovalDialog = false
                                 showPlantDialog = false
@@ -321,9 +317,7 @@ fun GardenScreen(
                                 if (conflict != null) { conflictMessage = conflict; showConflictDialog = true; return@Button }
                             }
                             gardenViewModel.manageFlowerpots(planterId, positions, selectedPlantForPot, tipoAccionSeleccionada)
-                            
-                            vibrationHandler(50L) // VIBRACIÓN CORTA AL PLANTAR
-
+                            vibrationHandler(50L)
                             showPlantDialog = false
                             selectedPots = emptyMap()
                         }) { Text(strings.gardenConfirm) }
@@ -340,8 +334,8 @@ fun GardenScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         OutlinedTextField(value = nombrePlanter, onValueChange = { nombrePlanter = it }, label = { Text(strings.gardenPlanterNamePlaceholder) }, modifier = Modifier.fillMaxWidth())
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                            NumberSelector(strings.gardenRows, numFilas, { numFilas = it }, 1..5)
-                            NumberSelector(strings.gardenCols, numColumnas, { numColumnas = it }, 1..5)
+                            NumberSelector(strings.gardenRows, numFilas, { numFilas = it }, 1..2)
+                            NumberSelector(strings.gardenCols, numColumnas, { numColumnas = it }, 1..8)
                         }
                     }
                 },
@@ -437,7 +431,9 @@ fun FlowerpotView(pot: GardenFlowerpot?, isSelected: Boolean, langCode: String, 
     val bgColor = when {
         isSelected -> Color(0xFFFFF176)
         pot == null -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        pot.tipoAccion == "Sembrar" -> Color(0xFFE1BEE7)
+        // CORRECCIÓN: Comprobamos el valor en español para la lógica de color, 
+        // ya que el objeto LocalizedText contiene ambos idiomas.
+        pot.tipoAccion?.es == "Sembrar" -> Color(0xFFE1BEE7)
         else -> Color(0xFFC8E6C9)
     }
     Box(modifier = modifier.aspectRatio(1f).background(bgColor, RoundedCornerShape(8.dp)).border(1.dp, if(isSelected) Color(0xFFFBC02D) else MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp)).clickable { onClick() }, Alignment.Center) {

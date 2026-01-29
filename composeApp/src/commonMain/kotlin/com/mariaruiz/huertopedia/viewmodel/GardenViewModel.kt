@@ -25,16 +25,23 @@ class GardenViewModel : ViewModel() {
     val planters = _planters.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val globalLastActivity: Flow<CropLog?> = planters.flatMapLatest { plantersList ->
-        if (plantersList.isEmpty()) {
-            flowOf(null)
+    val globalLastActivity: Flow<CropLog?> = auth.authStateChanged.flatMapLatest { user ->
+        val uid = user?.uid
+        if (uid != null) {
+            // SINTAXIS CORREGIDA: .where { ... } y nombre de colección 'crop_log'
+            db.collectionGroup("crop_log")
+                .where { "userId" equalTo uid }
+                .orderBy("timestamp", dev.gitlive.firebase.firestore.Direction.DESCENDING)
+                .limit(1)
+                .snapshots()
+                .map { snapshot ->
+                    snapshot.documents.firstOrNull()?.let { doc ->
+                        try { doc.data<CropLog>() } catch (e: Exception) { null }
+                    }
+                }
+                .catch { emit(null) }
         } else {
-            // Combinamos los flujos de logs de cada jardinera
-            val logsFlows = plantersList.map { observeCropLogs(it.id) }
-            combine(logsFlows) { logsArray ->
-                logsArray.flatMap { it }
-                    .maxByOrNull { it.timestamp }
-            }
+            flowOf(null)
         }
     }
 
@@ -71,12 +78,16 @@ class GardenViewModel : ViewModel() {
 
     fun createPlanter(nombre: String, filas: Int, columnas: Int) {
         val uid = auth.currentUser?.uid ?: return
+        // LIMITACIÓN DE TAMAÑO: Máximo 2 filas y 8 columnas
+        val finalFilas = filas.coerceIn(1, 2)
+        val finalColumnas = columnas.coerceIn(1, 8)
+        
         viewModelScope.launch {
             try {
                 val data = mapOf(
                     "nombre" to nombre,
-                    "filas" to filas,
-                    "columnas" to columnas,
+                    "filas" to finalFilas,
+                    "columnas" to finalColumnas,
                     "fechaCreacion" to clockNow()
                 )
                 db.collection("usuario").document(uid).collection("planters").add(data)
@@ -95,6 +106,13 @@ class GardenViewModel : ViewModel() {
                     } catch (e: Exception) { }
                 }
 
+                // Generamos el texto localizado para la acción (Guardado bilingüe)
+                val localizedAction = if (accion == "Plantar") {
+                    LocalizedText(es = "Plantar", en = "Plant")
+                } else {
+                    LocalizedText(es = "Sembrar", en = "Sow")
+                }
+
                 positions.forEach { (f, c) ->
                     val potId = "r${f}_c${c}"
                     val ref = db.collection("usuario").document(uid)
@@ -108,10 +126,10 @@ class GardenViewModel : ViewModel() {
                             id = potId, planterId = planterId,
                             fila = f, columna = c,
                             plantaId = planta?.id, 
-                            nombrePlanta = planta?.nombreComun, // Objeto LocalizedText
+                            nombrePlanta = planta?.nombreComun, // LocalizedText
                             imagenUrl = urlPublica, 
                             fechaSiembra = clockNow(),
-                            tipoAccion = accion
+                            tipoAccion = localizedAction 
                         )
                         ref.set(flowerpot)
                     }
@@ -142,7 +160,7 @@ class GardenViewModel : ViewModel() {
             if (uid != null && planterId.isNotBlank()) {
                 db.collection("usuario").document(uid)
                     .collection("planters").document(planterId)
-                    .collection("croplogs") // Unificado a plural
+                    .collection("crop_log")
                     .snapshots()
                     .map { snapshot ->
                         snapshot.documents.mapNotNull { doc ->
@@ -169,7 +187,7 @@ class GardenViewModel : ViewModel() {
                 }
                 db.collection("usuario").document(uid)
                     .collection("planters").document(log.planterId)
-                    .collection("croplogs").add(finalLog)
+                    .collection("crop_log").add(finalLog)
             } catch (e: Exception) {}
         }
     }
@@ -180,7 +198,7 @@ class GardenViewModel : ViewModel() {
             try {
                 db.collection("usuario").document(uid)
                     .collection("planters").document(planterId)
-                    .collection("croplogs").document(logId).delete()
+                    .collection("crop_log").document(logId).delete()
             } catch (e: Exception) {}
         }
     }
