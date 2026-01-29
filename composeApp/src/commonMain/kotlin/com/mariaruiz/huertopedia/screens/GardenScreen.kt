@@ -340,8 +340,8 @@ fun GardenScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         OutlinedTextField(value = nombrePlanter, onValueChange = { nombrePlanter = it }, label = { Text(strings.gardenPlanterNamePlaceholder) }, modifier = Modifier.fillMaxWidth())
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                            NumberSelector(strings.gardenRows, numFilas, { numFilas = it }, 1..5)
-                            NumberSelector(strings.gardenCols, numColumnas, { numColumnas = it }, 1..5)
+                            NumberSelector(strings.gardenRows, numFilas, { numFilas = it }, 1..2)
+                            NumberSelector(strings.gardenCols, numColumnas, { numColumnas = it }, 1..8)
                         }
                     }
                 },
