@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState // <--- IMPORTANTE
+import androidx.compose.foundation.verticalScroll     // <--- IMPORTANTE
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -19,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import com.mariaruiz.huertopedia.viewmodel.GardenViewModel
 import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
 import com.mariaruiz.huertopedia.i18n.LocalStrings
+import com.mariaruiz.huertopedia.utils.rememberMapHandler
 import com.mariaruiz.huertopedia.utils.toHumanDateTimeString
 
 @Composable
@@ -37,6 +40,10 @@ fun HomeScreen(
 
     // Observamos la última actividad del ViewModel
     val lastActivity by gardenViewModel.globalLastActivity.collectAsState(initial = null)
+    val mapHandler = rememberMapHandler()
+
+    // 1. ESTADO DE SCROLL
+    val scrollState = rememberScrollState()
 
     Scaffold(
         topBar = {
@@ -89,7 +96,8 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 24.dp)
+                .verticalScroll(scrollState), // 2. PERMITIR SCROLL
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -122,7 +130,21 @@ fun HomeScreen(
                 onClick = navigateToWiki
             )
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Tarjeta de Mapas
+            HomeCard(
+                title = "Viveros Cercanos",
+                description = "Encuentra tiendas de plantas cerca de ti",
+                iconEmoji = "🗺️",
+                onClick = {
+                    mapHandler("viveros y tiendas de plantas")
+                }
+            )
+
+            // 3. CAMBIO IMPORTANTE: Usamos altura fija en vez de weight(1f)
+            // Antes: Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(32.dp))
 
             Text(
                 text = strings.homeLastActivity,
@@ -130,7 +152,7 @@ fun HomeScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp)) // Un pequeño espacio extra
 
             Surface(
                 modifier = Modifier
