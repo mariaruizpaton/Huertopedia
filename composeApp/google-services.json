@@ -14,6 +14,30 @@
       },
       "oauth_client": [
         {
+          "client_id": "21402074340-bcptl0rgaihurn71cdsjah8q9bcvi4s4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mariaruiz.huertopedia",
+            "certificate_hash": "b2814dd4003408b21c0016bed4c3b26ab9afe66c"
+          }
+        },
+        {
+          "client_id": "21402074340-j30lj7m67bur7oj4s8ad9im4afl2efoq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mariaruiz.huertopedia",
+            "certificate_hash": "9fcc57eb4790669ff875557cbc00b0cd2330c490"
+          }
+        },
+        {
+          "client_id": "21402074340-jmjnrq26rkr2eh8a8efvsslpk7sp36a7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mariaruiz.huertopedia",
+            "certificate_hash": "852bb1b994f5daca6772f98142e75d00f3a41460"
+          }
+        },
+        {
           "client_id": "21402074340-r9cne0sdceh44qjsotpjtj3achl5f05m.apps.googleusercontent.com",
           "client_type": 3
         }
