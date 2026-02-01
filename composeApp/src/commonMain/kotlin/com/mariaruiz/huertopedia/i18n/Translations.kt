@@ -27,9 +27,21 @@ interface AppStrings {
     val homeWikiDesc: String
     val homeLastActivity: String
     val homeActivitySample: String
+    val homeNoActivity: String
+    val homeActivityDefault: String
+    val homeMapCard: String
+    val homeMapDesc: String
     val searchPlaceholder: String
     val wikiTitle: String
     val viewProfile: String
+
+    // Chatbot
+    val chatTitle: String
+    val chatWelcome: String
+    val chatPlaceholder: String
+    val chatSystemPrompt: String
+    val chatErrorConnection: String
+    val chatErrorProcess: String
 
     // About Screen
     val aboutTitle: String
@@ -39,6 +51,9 @@ interface AppStrings {
     val aboutSourceCode: String
     val aboutPrivacyPolicy: String
     val aboutCopyright: String
+
+    // Garden
+    val sharePlanterMessage: String // <--- NUEVO
 
     // Wiki
     val wikiCategoryAll: String
@@ -177,9 +192,20 @@ object EnStrings : AppStrings {
     override val homeWikiDesc = "Information about tomatoes, lettuce and more"
     override val homeLastActivity = "Last recorded activity"
     override val homeActivitySample = "Yesterday: Watering in Plot 1"
+    override val homeNoActivity = "No recent activity"
+    override val homeActivityDefault = "Activity"
+    override val homeMapCard = "Nearby Nurseries"
+    override val homeMapDesc = "Find plant stores near you"
     override val searchPlaceholder = "Search plants..."
     override val wikiTitle = "Wiki"
     override val viewProfile = "View profile"
+
+    override val chatTitle = "HuertoBot 🤖"
+    override val chatWelcome = "Hi! I am HuertoBot 🤖, your trusted agronomist. How can I help you today?"
+    override val chatPlaceholder = "Ask something about your garden..."
+    override val chatSystemPrompt = "You are 'HuertoBot', an expert assistant, kind and funny about organic farming and urban gardening. Your answers must be short, useful and use plant emojis. If they ask you about something that is not gardening, politely say that you only talk about plants."
+    override val chatErrorConnection = "Connection problems 📡🌱"
+    override val chatErrorProcess = "I couldn't process your message 🌿"
 
     override val aboutTitle = "About Huertopedia"
     override val aboutDescription = "Your digital companion for urban gardening. Learn, plant, and grow your own food."
@@ -188,6 +214,8 @@ object EnStrings : AppStrings {
     override val aboutSourceCode = "View Source Code on GitHub"
     override val aboutPrivacyPolicy = "Privacy Policy"
     override val aboutCopyright = "© 2026 Huertopedia. All rights reserved."
+
+    override val sharePlanterMessage = "🌱 Check out my progress on Huertopedia! \n\nI'm taking care of the gardener '{0}' with {1} plants. 🌻\n\nSee it here: {2}"
 
     override val wikiCategoryAll = "All"
     override val wikiCategoryVegetables = "Vegetables"
@@ -318,9 +346,20 @@ object EsStrings : AppStrings {
     override val homeWikiDesc = "Información sobre tomates, lechugas y más"
     override val homeLastActivity = "Última actividad registrada"
     override val homeActivitySample = "Ayer: Riego en Jardinera 1"
+    override val homeNoActivity = "No hay actividad reciente"
+    override val homeActivityDefault = "Actividad"
+    override val homeMapCard = "Viveros Cercanos"
+    override val homeMapDesc = "Encuentra tiendas de plantas cerca de ti"
     override val searchPlaceholder = "Buscar plantas..."
     override val wikiTitle = "Wiki"
     override val viewProfile = "Ver perfil"
+
+    override val chatTitle = "HuertoBot 🤖"
+    override val chatWelcome = "¡Hola! Soy HuertoBot 🤖, tu ingeniero agrónomo de confianza. ¿En qué puedo ayudarte hoy?"
+    override val chatPlaceholder = "Pregunta algo sobre tu huerto..."
+    override val chatSystemPrompt = "Eres 'HuertoBot', un asistente experto, amable y divertido sobre agricultura ecológica y jardinería urbana. Tus respuestas deben ser breves, útiles y usar emojis de plantas. Si te preguntan sobre algo que no sea jardinería, di amablemente que solo hablas de plantas."
+    override val chatErrorConnection = "Problemas de conexión 📡🌱"
+    override val chatErrorProcess = "No pude procesar tu mensaje 🌿"
 
     override val aboutTitle = "Acerca de Huertopedia"
     override val aboutDescription = "Tu compañero digital para el huerto urbano. Aprende, planta y cultiva tus propios alimentos."
@@ -329,6 +368,8 @@ object EsStrings : AppStrings {
     override val aboutSourceCode = "Ver Código Fuente en GitHub"
     override val aboutPrivacyPolicy = "Política de Privacidad"
     override val aboutCopyright = "© 2026 Huertopedia. Todos los derechos reservados."
+
+    override val sharePlanterMessage = "🌱 ¡Mira mi progreso en Huertopedia! \n\nEstoy cuidando la jardinera '{0}' con {1} plantas. 🌻\n\nVer aquí: {2}"
 
     override val wikiCategoryAll = "Todo"
     override val wikiCategoryVegetables = "Hortalizas"

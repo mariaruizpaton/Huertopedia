@@ -396,7 +396,11 @@ fun PlanterCard(planter: Planter, gardenViewModel: GardenViewModel, selectedPots
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = {
                         val deepLinkUrl = "https://huertopedia.app/jardinera/${planter.id}"
-                        val text = "🌱 ¡Mira mi progreso en Huertopedia! \n\nEstoy cuidando la jardinera '${planter.nombre}' con ${occupiedPots.size} plantas. 🌻\n\nVer aquí: $deepLinkUrl"
+                        // CORRECCIÓN: Usamos la etiqueta de traducción dinámica
+                        val text = strings.sharePlanterMessage
+                            .replace("{0}", planter.nombre)
+                            .replace("{1}", occupiedPots.size.toString())
+                            .replace("{2}", deepLinkUrl)
                         shareHandler(text)
                     }) { Icon(Icons.Default.Share, null, tint = MaterialTheme.colorScheme.primary) }
                     IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error) }
@@ -431,8 +435,6 @@ fun FlowerpotView(pot: GardenFlowerpot?, isSelected: Boolean, langCode: String, 
     val bgColor = when {
         isSelected -> Color(0xFFFFF176)
         pot == null -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        // CORRECCIÓN: Comprobamos el valor en español para la lógica de color, 
-        // ya que el objeto LocalizedText contiene ambos idiomas.
         pot.tipoAccion?.es == "Sembrar" -> Color(0xFFE1BEE7)
         else -> Color(0xFFC8E6C9)
     }

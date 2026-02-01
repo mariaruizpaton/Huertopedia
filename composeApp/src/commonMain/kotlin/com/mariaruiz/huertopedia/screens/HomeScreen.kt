@@ -1,20 +1,21 @@
 package com.mariaruiz.huertopedia.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState // <--- IMPORTANTE
-import androidx.compose.foundation.verticalScroll     // <--- IMPORTANTE
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -23,6 +24,9 @@ import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
 import com.mariaruiz.huertopedia.i18n.LocalStrings
 import com.mariaruiz.huertopedia.utils.rememberMapHandler
 import com.mariaruiz.huertopedia.utils.toHumanDateTimeString
+import org.jetbrains.compose.resources.painterResource
+import huertopedia.composeapp.generated.resources.Res
+import huertopedia.composeapp.generated.resources.logo_app
 
 @Composable
 fun HomeScreen(
@@ -38,11 +42,8 @@ fun HomeScreen(
     val strings = LocalStrings.current
     val langCode = strings.changeLanguage.takeLast(2).lowercase() // Obtenemos "es" o "en"
 
-    // Observamos la última actividad del ViewModel
     val lastActivity by gardenViewModel.globalLastActivity.collectAsState(initial = null)
     val mapHandler = rememberMapHandler()
-
-    // 1. ESTADO DE SCROLL
     val scrollState = rememberScrollState()
 
     Scaffold(
@@ -80,7 +81,13 @@ fun HomeScreen(
 
                         DropdownMenuItem(
                             text = { Text(strings.aboutTitle) },
-                            leadingIcon = { Icon(Icons.Default.Info, null) },
+                            leadingIcon = {
+                                Image(
+                                    painter = painterResource(Res.drawable.logo_app),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp).clip(CircleShape)
+                                )
+                            },
                             onClick = {
                                 showMenu = false
                                 navigateToAbout()
@@ -97,11 +104,11 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = 24.dp)
-                .verticalScroll(scrollState), // 2. PERMITIR SCROLL
+                .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = strings.homeWelcome.replace("{0}", viewModel.name ?: "Usuario"),
+                text = strings.homeWelcome.replace("{0}", viewModel.name ?: strings.loginName),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
@@ -132,18 +139,17 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Tarjeta de Mapas
+            // Tarjeta de Mapas (Traducida)
             HomeCard(
-                title = "Viveros Cercanos",
-                description = "Encuentra tiendas de plantas cerca de ti",
+                title = strings.homeMapCard,
+                description = strings.homeMapDesc,
                 iconEmoji = "🗺️",
                 onClick = {
-                    mapHandler("viveros y tiendas de plantas")
+                    val query = if (langCode == "es") "viveros y tiendas de plantas" else "plant nurseries and stores"
+                    mapHandler(query)
                 }
             )
 
-            // 3. CAMBIO IMPORTANTE: Usamos altura fija en vez de weight(1f)
-            // Antes: Spacer(modifier = Modifier.weight(1f))
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
@@ -152,7 +158,7 @@ fun HomeScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Spacer(modifier = Modifier.height(8.dp)) // Un pequeño espacio extra
+            Spacer(modifier = Modifier.height(8.dp))
 
             Surface(
                 modifier = Modifier
@@ -165,15 +171,14 @@ fun HomeScreen(
                 shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.surface
             ) {
-                // Usamos tus utilidades para formatear la fecha/hora
                 val activityText = if (lastActivity != null) {
-                    val tipo = lastActivity?.eventType?.get(langCode) ?: "Actividad"
+                    val tipo = lastActivity?.eventType?.get(langCode) ?: strings.homeActivityDefault
                     val desc = lastActivity?.notes?.get(langCode)?.take(20) ?: ""
                     val fechaStr = lastActivity!!.timestamp.toHumanDateTimeString()
 
                     "$tipo: $desc ($fechaStr)"
                 } else {
-                    "No hay actividad reciente"
+                    strings.homeNoActivity
                 }
 
                 Text(
