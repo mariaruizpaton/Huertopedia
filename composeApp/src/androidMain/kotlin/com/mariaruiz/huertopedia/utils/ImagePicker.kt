@@ -1,3 +1,8 @@
+/**
+ * Este archivo contiene las implementaciones reales (`actual`) para Android relacionadas con la
+ * selección y captura de imágenes, incluyendo la corrección de la orientación de la imagen y
+ * la conversión de datos para Firebase.
+ */
 package com.mariaruiz.huertopedia.utils
 
 import android.net.Uri
@@ -18,14 +23,26 @@ import android.media.ExifInterface
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
+/**
+ * Implementación real (`actual`) para Android de la clase `ImagePickerLauncher`.
+ */
 actual class ImagePickerLauncher(
     private val onLaunch: () -> Unit
 ) {
+    /**
+     * Ejecuta la acción de lanzamiento para abrir el selector de imágenes.
+     */
     actual fun launch() {
         onLaunch()
     }
 }
 
+/**
+ * Implementación real (`actual`) para Android de `rememberImagePicker`.
+ *
+ * @param onImagePicked Callback que se invoca con los bytes de la imagen seleccionada o `null`.
+ * @return Una instancia de `ImagePickerLauncher`.
+ */
 @Composable
 actual fun rememberImagePicker(onImagePicked: (ByteArray?) -> Unit): ImagePickerLauncher {
     val context = LocalContext.current
@@ -49,6 +66,12 @@ actual fun rememberImagePicker(onImagePicked: (ByteArray?) -> Unit): ImagePicker
     }
 }
 
+/**
+ * Implementación real (`actual`) para Android de `rememberCameraLauncher`.
+ *
+ * @param onImageCaptured Callback que se invoca con los bytes de la imagen capturada o `null`.
+ * @return Una instancia de `CameraLauncher`.
+ */
 @Composable
 actual fun rememberCameraLauncher(onImageCaptured: (ByteArray?) -> Unit): CameraLauncher {
     val context = LocalContext.current
@@ -58,7 +81,6 @@ actual fun rememberCameraLauncher(onImageCaptured: (ByteArray?) -> Unit): Camera
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success && tempUri != null) {
-            // AQUÍ ESTÁ EL CAMBIO: Llamamos a la función mágica que endereza la foto
             val fixedBytes = fixImageOrientation(context, tempUri!!)
             onImageCaptured(fixedBytes)
         } else {
@@ -83,16 +105,19 @@ actual fun rememberCameraLauncher(onImageCaptured: (ByteArray?) -> Unit): Camera
     }
 }
 
-// --- FUNCIÓN MÁGICA PARA CORREGIR ROTACIÓN ---
+/**
+ * Corrige la orientación de una imagen basándose en sus metadatos EXIF.
+ *
+ * @param context El contexto de la aplicación.
+ * @param uri El URI de la imagen a corregir.
+ * @return Un `ByteArray` con la imagen corregida, o `null` si ocurre un error.
+ */
 private fun fixImageOrientation(context: Context, uri: Uri): ByteArray? {
     try {
         val inputStream: InputStream = context.contentResolver.openInputStream(uri) ?: return null
 
-        // 1. Leemos los bytes originales
         val originalBytes = inputStream.use { it.readBytes() }
 
-        // 2. Leemos la etiqueta EXIF para saber cuánto está girada
-        // Abrimos un nuevo stream porque el anterior ya se leyó
         val exifStream = context.contentResolver.openInputStream(uri) ?: return originalBytes
         val exif = ExifInterface(exifStream)
         val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
@@ -105,12 +130,10 @@ private fun fixImageOrientation(context: Context, uri: Uri): ByteArray? {
             else -> 0f
         }
 
-        // Si no está girada (0 grados), devolvemos los bytes tal cual (ahorramos memoria)
         if (rotationInDegrees == 0f) {
             return originalBytes
         }
 
-        // 3. Si está girada, creamos un Bitmap y lo rotamos
         val bitmap = BitmapFactory.decodeByteArray(originalBytes, 0, originalBytes.size)
         val matrix = Matrix()
         matrix.preRotate(rotationInDegrees)
@@ -119,11 +142,9 @@ private fun fixImageOrientation(context: Context, uri: Uri): ByteArray? {
             bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true
         )
 
-        // 4. Volvemos a convertir el Bitmap rotado a ByteArray (JPG)
         val outputStream = ByteArrayOutputStream()
-        rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream) // Calidad 90%
+        rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
 
-        // Limpiamos memoria
         bitmap.recycle()
         if (rotatedBitmap != bitmap) rotatedBitmap.recycle()
 
@@ -135,15 +156,23 @@ private fun fixImageOrientation(context: Context, uri: Uri): ByteArray? {
     }
 }
 
+/**
+ * Implementación real (`actual`) para Android de la clase `CameraLauncher`.
+ */
 actual class CameraLauncher(
     private val onLaunch: () -> Unit
 ) {
+    /**
+     * Ejecuta la acción de lanzamiento para abrir la cámara.
+     */
     actual fun capture() {
         onLaunch()
     }
 }
 
-// --- AÑADE ESTA FUNCIÓN AL FINAL DEL ARCHIVO ---
+/**
+ * Implementación real (`actual`) para Android de la función de extensión `toFirebaseData`.
+ */
 actual fun ByteArray.toFirebaseData(): Data {
     return Data(this)
 }

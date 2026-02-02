@@ -1,3 +1,7 @@
+/**
+ * Interfaz que define todas las cadenas de texto utilizadas en la aplicación.
+ * Esto permite una fácil internacionalización y gestión de los textos.
+ */
 package com.mariaruiz.huertopedia.i18n
 
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -53,7 +57,7 @@ interface AppStrings {
     val aboutCopyright: String
 
     // Garden
-    val sharePlanterMessage: String // <--- NUEVO
+    val sharePlanterMessage: String
 
     // Wiki
     val wikiCategoryAll: String
@@ -167,6 +171,9 @@ interface AppStrings {
     val errorNameEmpty: String
 }
 
+/**
+ * Objeto que proporciona las cadenas de texto en inglés.
+ */
 object EnStrings : AppStrings {
     override val appName = "Huertopedia"
     override val loginWelcome = "Welcome Back"
@@ -321,6 +328,9 @@ object EnStrings : AppStrings {
     override val errorNameEmpty = "Name cannot be empty."
 }
 
+/**
+ * Objeto que proporciona las cadenas de texto en español.
+ */
 object EsStrings : AppStrings {
     override val appName = "Huertopedia"
     override val loginWelcome = "Bienvenido"
@@ -475,4 +485,8 @@ object EsStrings : AppStrings {
     override val errorNameEmpty = "El nombre no puede estar vacío."
 }
 
+/**
+ * Proporciona las cadenas de texto a través de un CompositionLocal.
+ * El valor predeterminado es el español.
+ */
 val LocalStrings = staticCompositionLocalOf<AppStrings> { EsStrings }

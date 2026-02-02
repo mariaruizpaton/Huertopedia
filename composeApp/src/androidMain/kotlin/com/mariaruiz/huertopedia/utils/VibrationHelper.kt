@@ -1,3 +1,12 @@
+/**
+ * Implementación real (`actual`) para Android de la función `rememberVibrationHandler`.
+ *
+ * Esta función crea y recuerda una lambda que, al ser invocada con una duración en milisegundos,
+ * hace vibrar el dispositivo. Utiliza las API de vibración de Android, manejando la compatibilidad
+ * entre diferentes versiones del sistema operativo.
+ *
+ * @return Una función `(Long) -> Unit` que provoca la vibración del dispositivo.
+ */
 package com.mariaruiz.huertopedia.utils
 
 import android.content.Context
@@ -15,6 +24,7 @@ actual fun rememberVibrationHandler(): (Long) -> Unit {
 
     return remember {
         { milliseconds ->
+            // Se obtiene el servicio de vibración del sistema.
             val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
                 vibratorManager.defaultVibrator
@@ -23,7 +33,9 @@ actual fun rememberVibrationHandler(): (Long) -> Unit {
                 context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
             }
 
+            // Se comprueba si el dispositivo tiene capacidad de vibración.
             if (vibrator.hasVibrator()) {
+                // Se hace vibrar el dispositivo con la duración especificada.
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     vibrator.vibrate(VibrationEffect.createOneShot(milliseconds, VibrationEffect.DEFAULT_AMPLITUDE))
                 } else {

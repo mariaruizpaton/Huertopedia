@@ -1,3 +1,6 @@
+/**
+ * Este archivo contiene funciones de utilidad para trabajar con fechas y horas.
+ */
 package com.mariaruiz.huertopedia.utils
 
 import kotlinx.datetime.Instant
@@ -5,7 +8,11 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.ExperimentalTime
 
-// Función de extensión para convertir Long a "dd/MM/yyyy"
+/**
+ * Convierte un timestamp en milisegundos a una cadena de fecha legible por humanos en formato "dd/MM/yyyy".
+ *
+ * @return La fecha formateada como String, o "Sin fecha" si el timestamp es 0.
+ */
 @OptIn(ExperimentalTime::class)
 fun Long.toHumanDateString(): String {
     if (this == 0L) return "Sin fecha"
@@ -20,7 +27,11 @@ fun Long.toHumanDateString(): String {
     return "$day/$month/$year"
 }
 
-// NUEVA: Función para "dd/MM/yyyy HH:mm" (Ideal para logs y última actividad)
+/**
+ * Convierte un timestamp en milisegundos a una cadena de fecha y hora legible por humanos en formato "dd/MM/yyyy HH:mm".
+ *
+ * @return La fecha y hora formateadas como String, o "Sin fecha" si el timestamp es 0.
+ */
 @OptIn(ExperimentalTime::class)
 fun Long.toHumanDateTimeString(): String {
     if (this == 0L) return "Sin fecha"

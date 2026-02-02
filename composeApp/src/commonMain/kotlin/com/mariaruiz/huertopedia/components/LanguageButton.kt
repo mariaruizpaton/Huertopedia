@@ -8,6 +8,14 @@ import com.mariaruiz.huertopedia.i18n.LocalStrings
 import com.mariaruiz.huertopedia.repositories.LanguageRepository
 import kotlinx.coroutines.launch
 
+/**
+ * Un botón que permite al usuario cambiar el idioma de la aplicación.
+ *
+ * Al hacer clic, cambia entre español ("es") e inglés ("en").
+ * Muestra un icono de traducción y un texto que indica la acción.
+ *
+ * @param repository El repositorio utilizado para obtener y establecer el idioma actual.
+ */
 @Composable
 fun LanguageButton(repository: LanguageRepository) {
     val currentLang by repository.currentLanguage.collectAsState()

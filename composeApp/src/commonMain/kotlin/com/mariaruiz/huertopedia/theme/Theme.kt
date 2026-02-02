@@ -1,10 +1,15 @@
+/**
+ * Este archivo define las paletas de colores para los temas claro y oscuro de la aplicación.
+ */
 package com.mariaruiz.huertopedia.theme
 
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
-// Paleta Clara (La que ya tienes)
+/**
+ * Paleta de colores para el tema claro de la aplicación.
+ */
 val LightGardenColors = lightColorScheme(
     primary = Color(0xFF4CAF50),
     background = Color(0xFFF0F4E8),
@@ -15,7 +20,9 @@ val LightGardenColors = lightColorScheme(
     secondaryContainer = Color(0xFFC8E6C9)
 )
 
-// Paleta Oscura (Nueva diseñada para Huerto)
+/**
+ * Paleta de colores para el tema oscuro de la aplicación, diseñada para ser agradable a la vista en condiciones de poca luz.
+ */
 val DarkGardenColors = darkColorScheme(
     primary = Color(0xFF81C784), // Verde más suave para que no brille mucho
     background = Color(0xFF12140E), // Fondo casi negro con un toque verdoso

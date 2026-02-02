@@ -1,3 +1,7 @@
+/**
+ * Repositorio encargado de gestionar las preferencias de tema de la aplicación.
+ * Permite guardar y obtener el tema tanto localmente como en Firestore si el usuario está logueado.
+ */
 package com.mariaruiz.huertopedia.repositories
 
 import com.russhwolf.settings.Settings
@@ -14,8 +18,16 @@ class ThemeRepository {
 
     // "system" (por defecto), "light", "dark"
     private val _themePreference = MutableStateFlow<String>(settings.getString("pref_theme", "system"))
+    /**
+     * Flujo que emite la preferencia de tema actual. Puede ser "system", "light" o "dark".
+     */
     val themePreference: StateFlow<String> = _themePreference
 
+    /**
+     * Establece el tema de la aplicación y lo sincroniza con Firestore si hay un usuario logueado.
+     *
+     * @param theme El tema a establecer ("system", "light" o "dark").
+     */
     suspend fun setTheme(theme: String) {
         // 1. Guardar en Local (Settings)
         settings.putString("pref_theme", theme)
