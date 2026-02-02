@@ -38,6 +38,19 @@ import dev.icerock.moko.permissions.Permission
 import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 
+/**
+ * Composable para la pantalla de perfil y configuración del usuario.
+ *
+ * Permite al usuario ver y editar su información de perfil (nombre, descripción, imagen),
+ * cambiar el idioma y el tema de la aplicación, y cerrar sesión.
+ * La pantalla tiene dos modos: visualización y edición.
+ *
+ * @param onLogout Callback para gestionar el cierre de sesión.
+ * @param onBack Callback para navegar hacia atrás.
+ * @param viewModel Instancia de [LoginViewModel] para gestionar los datos y el estado del usuario.
+ * @param languageRepository Repositorio para gestionar la preferencia de idioma.
+ * @param themeRepository Repositorio para gestionar la preferencia de tema.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserScreen(
@@ -51,11 +64,13 @@ fun UserScreen(
     val themePref by themeRepository.themePreference.collectAsState()
     val scope = rememberCoroutineScope()
 
+    // --- Estado para el modo de edición ---
     var isEditing by remember { mutableStateOf(false) }
     var tempNombre by remember { mutableStateOf(viewModel.name ?: "") }
     var tempDesc by remember { mutableStateOf(viewModel.descripcion) }
     var tempImageBytes by remember { mutableStateOf<ByteArray?>(null) }
 
+    // --- Gestión de permisos para la galería ---
     val factory = rememberPermissionsControllerFactory()
     val controller = remember(factory) { factory.createPermissionsController() }
     BindEffect(controller)
@@ -64,15 +79,17 @@ fun UserScreen(
         tempImageBytes = bytes
     }
 
+    // Sincroniza los datos temporales cuando se entra o sale del modo de edición
     LaunchedEffect(isEditing) {
         if (isEditing) {
             tempNombre = viewModel.name ?: ""
             tempDesc = viewModel.descripcion
         } else {
-            tempImageBytes = null
+            tempImageBytes = null // Limpia la imagen temporal al salir de edición
         }
     }
 
+    // Obtiene la URL de descarga de la imagen cuando cambia
     LaunchedEffect(viewModel.imagenUrl) {
         if (viewModel.imagenUrl.isNotEmpty()) {
             viewModel.obtenerUrlDescarga()
@@ -93,7 +110,7 @@ fun UserScreen(
                 actions = {
                     if (!isEditing) {
                         IconButton(onClick = { isEditing = true }) {
-                            Icon(Icons.Filled.Edit, contentDescription = null)
+                            Icon(Icons.Filled.Edit, contentDescription = "Editar perfil")
                         }
                     }
                 }
@@ -110,6 +127,7 @@ fun UserScreen(
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
+            // --- Imagen de perfil ---
             Box(contentAlignment = Alignment.BottomEnd) {
                 Surface(
                     modifier = Modifier
@@ -122,15 +140,11 @@ fun UserScreen(
                                     controller.providePermission(Permission.GALLERY)
                                     imagePicker.launch()
                                 } catch (e: DeniedAlwaysException) {
-                                    try {
-                                        imagePicker.launch()
-                                    } catch (ex: Exception) {
-                                        controller.openAppSettings()
-                                    }
+                                    controller.openAppSettings()
                                 } catch (e: DeniedException) {
-                                    println("Permiso denegado")
+                                    println("Permiso a galería denegado")
                                 } catch (e: Exception) {
-                                    imagePicker.launch()
+                                    imagePicker.launch() // Intento para plataformas sin sistema de permisos complejo
                                 }
                             }
                         },
@@ -139,13 +153,13 @@ fun UserScreen(
                     val imageResource: Resource<Painter> = when {
                         tempImageBytes != null -> asyncPainterResource(data = tempImageBytes!!)
                         !viewModel.imagenUrlRenderizable.isNullOrEmpty() -> asyncPainterResource(data = viewModel.imagenUrlRenderizable!!)
-                        else -> asyncPainterResource(data = Unit)
+                        else -> asyncPainterResource(data = Unit) // Placeholder
                     }
 
                     if (tempImageBytes != null || !viewModel.imagenUrlRenderizable.isNullOrEmpty()) {
                         KamelImage(
                             resource = imageResource,
-                            contentDescription = null,
+                            contentDescription = "Imagen de perfil",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize(),
                             animationSpec = tween(500)
@@ -153,7 +167,7 @@ fun UserScreen(
                     } else {
                         Icon(
                             imageVector = Icons.Default.Person,
-                            contentDescription = null,
+                            contentDescription = "Placeholder de perfil",
                             modifier = Modifier.padding(24.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -165,14 +179,16 @@ fun UserScreen(
                         modifier = Modifier.size(32.dp).clip(CircleShape),
                         color = MaterialTheme.colorScheme.secondary
                     ) {
-                        Icon(Icons.Filled.CameraAlt, null, Modifier.padding(6.dp), Color.White)
+                        Icon(Icons.Filled.CameraAlt, "Cambiar imagen", Modifier.padding(6.dp), Color.White)
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // --- Contenido: Modo Edición vs. Modo Visualización ---
             if (isEditing) {
+                // --- Formulario de Edición ---
                 OutlinedTextField(
                     value = tempNombre,
                     onValueChange = { tempNombre = it },
@@ -208,6 +224,7 @@ fun UserScreen(
                     }
                 }
             } else {
+                // --- Vista de Perfil y Configuración ---
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
@@ -239,6 +256,7 @@ fun UserScreen(
 
                 HorizontalDivider(Modifier.padding(bottom = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
 
+                // --- Controles de Configuración ---
                 Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
                     Text(strings.changeLanguage, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onBackground)
                     LanguageButton(languageRepository)
@@ -254,7 +272,7 @@ fun UserScreen(
                         }
                         IconButton(onClick = { scope.launch { themeRepository.setTheme("dark") } }) {
                             Icon(Icons.Default.DarkMode, strings.themeDark, tint = if(themePref == "dark") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)
-                        }
+                         }
                         IconButton(onClick = { scope.launch { themeRepository.setTheme("system") } }) {
                             Icon(Icons.Default.SettingsBrightness, strings.themeSystem, tint = if(themePref == "system") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)
                         }
@@ -264,6 +282,7 @@ fun UserScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
+            // --- Botón de Cerrar Sesión ---
             TextButton(
                 onClick = onLogout,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),

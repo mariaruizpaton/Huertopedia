@@ -22,10 +22,29 @@ import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.firestore
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
+/**
+ * Define las diferentes pantallas (destinos de navegación) de la aplicación.
+ */
 enum class Screen {
     Login, User, Home, Wiki, GardenManagement, PlantDetail, CropLog, About
 }
 
+/**
+ * El composable raíz de la aplicación Huertopedia.
+ *
+ * Este composable se encarga de:
+ * - Inicializar y gestionar los repositorios de persistencia para el idioma y el tema.
+ * - Configurar el tema de la aplicación (claro/oscuro) y el idioma (español/inglés).
+ * - Gestionar el estado de la navegación principal de la aplicación mediante un enum `Screen`.
+ * - Inicializar los ViewModels (`LoginViewModel`, `WikiViewModel`, `GardenViewModel`).
+ * - Sincronizar las preferencias del usuario (idioma y tema) desde Firestore al iniciar sesión.
+ * - Mostrar la pantalla adecuada según el estado actual de la navegación.
+ *
+ * @param onGoogleLogin Una función de callback para iniciar el flujo de inicio de sesión con Google.
+ *                      Se le pasa un lambda `onResult` para notificar si el inicio de sesión fue exitoso.
+ * @param onSetupViewModel Un callback para pasar la instancia de `LoginViewModel` al código de la plataforma.
+ * @param onSetupWikiViewModel Un callback para pasar la instancia de `WikiViewModel` al código de la plataforma.
+ */
 @Composable
 @Preview
 fun App(

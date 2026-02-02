@@ -42,6 +42,15 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
+/**
+ * Muestra la pantalla principal del jardín del usuario, donde puede ver y gestionar sus jardineras.
+ *
+ * @param onBack Llama a esta función para navegar hacia atrás.
+ * @param viewModel El [LoginViewModel] para gestionar el estado de la sesión.
+ * @param gardenViewModel El [GardenViewModel] para gestionar los datos del jardín.
+ * @param languageRepository El repositorio para obtener el idioma actual.
+ * @param onNavigateToLog Llama a esta función para navegar al registro de una jardinera.
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun GardenScreen(
@@ -55,7 +64,7 @@ fun GardenScreen(
     val langCode by languageRepository.currentLanguage.collectAsState()
     val myPlanters by gardenViewModel.planters.collectAsState(initial = emptyList())
     val availablePlants by gardenViewModel.availablePlants.collectAsState()
-    
+
     val vibrationHandler = rememberVibrationHandler()
 
     var showCreateDialog by remember { mutableStateOf(false) }
@@ -70,7 +79,7 @@ fun GardenScreen(
     var selectedPots by remember { mutableStateOf(emptyMap<Triple<String, Int, Int>, Boolean>()) }
     var showSelectionError by remember { mutableStateOf(false) }
     var showMultiplePlantersError by remember { mutableStateOf(false) }
-    
+
     var showConflictDialog by remember { mutableStateOf(false) }
     var conflictMessage by remember { mutableStateOf("") }
     var showConfirmRemovalDialog by remember { mutableStateOf(false) }
@@ -381,6 +390,18 @@ fun GardenScreen(
     }
 }
 
+/**
+ * Muestra una tarjeta con la información de una jardinera, incluyendo sus macetas y acciones.
+ *
+ * @param planter El objeto [Planter] a mostrar.
+ * @param gardenViewModel El [GardenViewModel] para obtener los datos.
+ * @param selectedPots El conjunto de macetas seleccionadas actualmente.
+ * @param langCode El código de idioma para la localización.
+ * @param onDelete Llama a esta función cuando se pulsa el botón de eliminar.
+ * @param onEditName Llama a esta función cuando se pulsa el botón de editar nombre.
+ * @param onPotClick Llama a esta función cuando se hace clic en una maceta.
+ * @param onLogClick Llama a esta función para ver el registro de la jardinera.
+ */
 @Composable
 fun PlanterCard(planter: Planter, gardenViewModel: GardenViewModel, selectedPots: Set<Triple<String, Int, Int>>, langCode: String, onDelete: () -> Unit, onEditName: () -> Unit, onPotClick: (Int, Int, Boolean) -> Unit, onLogClick: () -> Unit) {
     val strings = LocalStrings.current
@@ -429,6 +450,15 @@ fun PlanterCard(planter: Planter, gardenViewModel: GardenViewModel, selectedPots
     }
 }
 
+/**
+ * Muestra una única maceta en la jardinera, con su estado y contenido.
+ *
+ * @param pot El [GardenFlowerpot] a mostrar, o null si está vacía.
+ * @param isSelected Indica si la maceta está seleccionada.
+ * @param langCode El código de idioma para la localización.
+ * @param modifier El modificador a aplicar.
+ * @param onClick La acción a realizar al hacer clic en la maceta.
+ */
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun FlowerpotView(pot: GardenFlowerpot?, isSelected: Boolean, langCode: String, modifier: Modifier, onClick: () -> Unit) {
@@ -459,6 +489,14 @@ fun FlowerpotView(pot: GardenFlowerpot?, isSelected: Boolean, langCode: String, 
     }
 }
 
+/**
+ * Un selector numérico que permite al usuario incrementar o decrementar un valor dentro de un rango.
+ *
+ * @param label La etiqueta a mostrar sobre el selector.
+ * @param value El valor actual.
+ * @param onValueChange Llama a esta función cuando el valor cambia.
+ * @param range El rango de valores permitidos.
+ */
 @Composable
 fun NumberSelector(label: String, value: Int, onValueChange: (Int) -> Unit, range: IntRange) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -471,6 +509,9 @@ fun NumberSelector(label: String, value: Int, onValueChange: (Int) -> Unit, rang
     }
 }
 
+/**
+ * Muestra una superposición con una animación de recolección de hojas.
+ */
 @Composable
 fun HarvestAnimationOverlay() {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -481,8 +522,23 @@ fun HarvestAnimationOverlay() {
     }
 }
 
+/**
+ * Contiene los datos para una partícula de hoja en la animación.
+ *
+ * @param startXRatio La posición X inicial relativa al ancho del contenedor.
+ * @param delay El retardo antes de que comience la animación.
+ * @param duration La duración de la animación.
+ * @param icon El icono a mostrar para la partícula.
+ */
 data class LeafParticleData(val startXRatio: Float, val delay: Long, val duration: Int, val icon: ImageVector)
 
+/**
+ * Muestra una única partícula de hoja animada.
+ *
+ * @param data Los datos de la partícula [LeafParticleData].
+ * @param containerWidth El ancho del contenedor padre.
+ * @param containerHeight La altura del contenedor padre.
+ */
 @Composable
 fun BoxScope.LeafParticle(data: LeafParticleData, containerWidth: androidx.compose.ui.unit.Dp, containerHeight: androidx.compose.ui.unit.Dp) {
     val offsetY = remember { Animatable(0f) }

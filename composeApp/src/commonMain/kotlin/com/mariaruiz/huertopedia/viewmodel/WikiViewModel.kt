@@ -13,12 +13,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * ViewModel para la pantalla de la enciclopedia de plantas (Wiki).
+ *
+ * Gestiona el estado y la lógica para obtener, mostrar y filtrar la lista de plantas.
+ * Los datos se obtienen de Firestore y las imágenes de Firebase Storage.
+ */
 class WikiViewModel : ViewModel() {
 
     private val db = Firebase.firestore
     private val storage = Firebase.storage
-    private var allPlants: List<Plant> = emptyList()
+    private var allPlants: List<Plant> = emptyList() // Caché con todas las plantas
 
+    // Estado de la UI que expone la lista de plantas filtradas a mostrar
     private val _uiState = MutableStateFlow<List<Plant>>(emptyList())
     val plants = _uiState.asStateFlow()
 
@@ -26,6 +33,15 @@ class WikiViewModel : ViewModel() {
         fetchPlants()
     }
 
+    /**
+     * Obtiene la lista completa de plantas desde Firestore y resuelve las URLs de sus imágenes.
+     *
+     * 1.  Carga la colección "plantas" de Firestore.
+     * 2.  Mapea cada documento a un objeto `Plant`.
+     * 3.  Para cada planta, si `imagenUrl` es una ruta de Storage, la convierte a una URL de descarga pública.
+     * 4.  Actualiza la caché `allPlants` y el estado `_uiState` con la lista completa.
+     * 5.  Gestiona y muestra en consola los errores que puedan ocurrir durante el proceso.
+     */
     private fun fetchPlants() {
         viewModelScope.launch {
             try {
@@ -78,6 +94,13 @@ class WikiViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Filtra la lista de plantas basándose en una consulta de texto y una categoría.
+     *
+     * @param query El texto a buscar en el nombre común de la planta (ignora mayúsculas/minúsculas).
+     * @param categoryValue La categoría por la que filtrar. Si es "Todo", no se aplica filtro de categoría.
+     * @param langCode El código de idioma actual para realizar la búsqueda en el nombre y categoría correctos.
+     */
     fun filterPlants(query: String, categoryValue: String, langCode: String) {
         _uiState.value = allPlants.filter { plant ->
             // 1. Filtrado por nombre en el idioma actual

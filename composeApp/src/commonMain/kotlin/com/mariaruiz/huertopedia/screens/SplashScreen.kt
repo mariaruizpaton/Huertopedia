@@ -14,6 +14,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.mariaruiz.huertopedia.i18n.LocalStrings
 
+/**
+ * Composable para la pantalla de carga (Splash Screen).
+ *
+ * Muestra el nombre de la aplicación y un indicador de progreso circular mientras se cargan
+ * los datos iniciales o se determina el estado de autenticación del usuario.
+ */
 @Composable
 fun SplashScreen() {
     val strings = LocalStrings.current
@@ -22,13 +28,14 @@ fun SplashScreen() {
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary),
         contentAlignment = Alignment.Center
     ) {
-        // Usamos el nombre de la app desde las traducciones
+        // Nombre de la app obtenido de las cadenas de recursos localizadas
         Text(
             text = strings.appName, 
             color = Color.White, 
             style = MaterialTheme.typography.headlineLarge
         )
         
+        // Indicador de progreso en la parte inferior
         CircularProgressIndicator(
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 64.dp),
             color = Color.White

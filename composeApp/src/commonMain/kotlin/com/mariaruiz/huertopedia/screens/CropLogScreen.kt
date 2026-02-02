@@ -45,6 +45,13 @@ import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 import kotlinx.coroutines.launch
 
+/**
+ * Muestra la pantalla del registro de cultivo para una jardinera específica.
+ *
+ * @param planter La jardinera para la que se muestra el registro.
+ * @param onBack Llama a esta función para navegar hacia atrás.
+ * @param gardenViewModel El [GardenViewModel] para gestionar los datos del registro.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CropLogScreen(
@@ -257,6 +264,14 @@ fun CropLogScreen(
     }
 }
 
+/**
+ * Muestra un elemento en la línea de tiempo del registro de cultivo.
+ *
+ * @param log El [CropLog] a mostrar.
+ * @param langCode El código de idioma para la localización.
+ * @param onDeleteClick Llama a esta función cuando se pulsa el botón de eliminar.
+ * @param onImageClick Llama a esta función cuando se hace clic en una imagen.
+ */
 @Composable
 fun TimelineItem(log: CropLog, langCode: String, onDeleteClick: () -> Unit, onImageClick: (String) -> Unit) {
     val eventName = log.eventType.get(langCode)
@@ -300,6 +315,12 @@ fun TimelineItem(log: CropLog, langCode: String, onDeleteClick: () -> Unit, onIm
     }
 }
 
+/**
+ * Devuelve un color para un tipo de evento específico.
+ *
+ * @param eventEs El nombre del evento en español.
+ * @return El [Color] asociado al evento.
+ */
 fun getEventColor(eventEs: String): Color {
     return when (eventEs) {
         "Riego" -> Color(0xFF2196F3)
@@ -312,6 +333,12 @@ fun getEventColor(eventEs: String): Color {
     }
 }
 
+/**
+ * Devuelve un icono para un tipo de evento específico.
+ *
+ * @param eventEs El nombre del evento en español.
+ * @return El [ImageVector] asociado al evento.
+ */
 fun getEventIcon(eventEs: String): ImageVector {
     return when (eventEs) {
         "Riego" -> Icons.Default.WaterDrop

@@ -28,6 +28,20 @@ import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
 import com.mariaruiz.huertopedia.i18n.LocalStrings
 import com.mariaruiz.huertopedia.repositories.LanguageRepository
 
+/**
+ * Composable para la pantalla de inicio de sesión y registro.
+ *
+ * Permite al usuario:
+ * - Iniciar sesión con correo y contraseña.
+ * - Registrarse con nombre, correo y contraseña.
+ * - Iniciar sesión/registrarse a través de Google.
+ * - Cambiar entre el modo de inicio de sesión y el de registro.
+ * Muestra mensajes de error localizados y gestiona el foco de los campos de texto.
+ *
+ * @param viewModel Instancia de [LoginViewModel] que gestiona el estado y la lógica de autenticación.
+ * @param languageRepository Repositorio para la gestión del idioma (actualmente no se usa directamente aquí, pero está disponible).
+ * @param onGoogleLoginRequest Callback para iniciar el flujo de autenticación con Google.
+ */
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel,
@@ -38,19 +52,20 @@ fun LoginScreen(
     val strings = LocalStrings.current
     var passwordVisible by remember { mutableStateOf(false) }
 
-    // Fondo adaptativo
-    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        
+    Box(
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .pointerInput(Unit) {
+                .pointerInput(Unit) { // Cierra el teclado al tocar fuera de los campos
                     detectTapGestures(onTap = { focusManager.clearFocus() })
                 }
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            // --- Título y Mensaje de Error ---
             Text(
                 text = if (viewModel.isRegisterMode) strings.loginCreateAccount else strings.loginWelcome,
                 style = MaterialTheme.typography.headlineLarge,
@@ -70,7 +85,6 @@ fun LoginScreen(
                     "error_name_empty" -> strings.errorNameEmpty
                     else -> strings.errorUnknown
                 }
-
                 Text(
                     text = errorText,
                     color = MaterialTheme.colorScheme.error,
@@ -79,7 +93,7 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // Botón Google Adaptativo
+            // --- Botón de Google ---
             Button(
                 onClick = {
                     focusManager.clearFocus()
@@ -94,7 +108,7 @@ fun LoginScreen(
                 shape = RoundedCornerShape(24.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                    Canvas(modifier = Modifier.width(24.dp).height(24.dp)) {
+                    Canvas(modifier = Modifier.width(24.dp).height(24.dp)) { // Logo de Google dibujado
                         val width = size.width
                         val height = size.height
                         val strokeWidth = width * 0.22f
@@ -111,7 +125,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(26.dp))
 
-            // Tabs Login/Registro
+            // --- Pestañas de Login/Registro ---
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 Button(
                     onClick = { focusManager.clearFocus(); viewModel.isRegisterMode = false },
@@ -132,7 +146,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Formulario
+            // --- Formulario de Correo/Contraseña ---
             Card(
                 modifier = Modifier.fillMaxWidth(), 
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -167,7 +181,7 @@ fun LoginScreen(
                         visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         trailingIcon = {
                             val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                            IconButton(onClick = { passwordVisible = !passwordVisible }) { Icon(image, null) }
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) { Icon(image, "Toggle password visibility") }
                         },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
@@ -178,6 +192,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // --- Botón Principal de Acción ---
             Button(
                 onClick = { focusManager.clearFocus(); viewModel.onAceptarClick() },
                 modifier = Modifier.fillMaxWidth().height(50.dp)

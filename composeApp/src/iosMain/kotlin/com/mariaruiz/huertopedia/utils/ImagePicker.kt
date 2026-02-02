@@ -22,14 +22,28 @@ import platform.UIKit.UIImagePickerControllerSourceType
 
 // ----------------------------------
 
+/**
+ * Lanzador real (`actual`) para el selector de imágenes en iOS.
+ *
+ * @param onLaunch La acción a ejecutar cuando se lanza el selector.
+ */
 actual class ImagePickerLauncher(
     private val onLaunch: () -> Unit,
 ) {
+    /**
+     * Inicia el proceso de selección de imágenes.
+     */
     actual fun launch() {
         onLaunch()
     }
 }
 
+/**
+ * Composable `actual` para iOS que proporciona un lanzador para el selector de imágenes de la galería.
+ *
+ * @param onImagePicked Callback que se invoca con los bytes de la imagen seleccionada o `null` si la operación fue cancelada.
+ * @return Una instancia de [ImagePickerLauncher] que puede ser usada para iniciar el selector de imágenes.
+ */
 @Composable
 actual fun rememberImagePicker(onImagePicked: (ByteArray?) -> Unit): ImagePickerLauncher {
     val rootViewController = getRootViewController()
@@ -65,6 +79,12 @@ actual fun rememberImagePicker(onImagePicked: (ByteArray?) -> Unit): ImagePicker
     }
 }
 
+/**
+ * Delegado para `UIImagePickerController` que maneja la selección de imágenes y la cancelación.
+ *
+ * @param onImagePicked Callback invocado cuando se selecciona una imagen.
+ * @param onCancelled Callback invocado cuando el usuario cancela la selección.
+ */
 private class ImagePickerDelegate(
     private val onImagePicked: (UIImage?) -> Unit,
     private val onCancelled: () -> Unit
@@ -84,6 +104,11 @@ private class ImagePickerDelegate(
     }
 }
 
+/**
+ * Convierte un `UIImage` a un `ByteArray` en formato JPEG.
+ *
+ * @return Un `ByteArray` con los datos de la imagen, o `null` si la conversión falla.
+ */
 @OptIn(ExperimentalForeignApi::class)
 private fun UIImage.toByteArray(): ByteArray? {
     val data: NSData = UIImageJPEGRepresentation(this, 0.8) ?: return null
@@ -94,11 +119,20 @@ private fun UIImage.toByteArray(): ByteArray? {
     return bytes
 }
 
+/**
+ * Contenedor de datos para el `UIImagePickerController` y su delegado.
+ */
 private data class PickerData(
     val picker: UIImagePickerController,
     val delegate: ImagePickerDelegate
 )
 
+/**
+ * Obtiene el `UIViewController` raíz de la aplicación.
+ *
+ * @return El `UIViewController` raíz.
+ * @throws IllegalStateException si no se encuentra la ventana clave o el controlador de vista raíz.
+ */
 @OptIn(ExperimentalForeignApi::class)
 @Composable
 private fun getRootViewController(): UIViewController {
@@ -108,6 +142,11 @@ private fun getRootViewController(): UIViewController {
     }
 }
 
+/**
+ * Convierte un `ByteArray` en un objeto `Data` de Firebase.
+ *
+ * @return Un objeto `Data` compatible con Firebase Storage.
+ */
 @OptIn(ExperimentalForeignApi::class)
 actual fun ByteArray.toFirebaseData(): Data {
     val nsData = usePinned { pinned ->
@@ -119,6 +158,12 @@ actual fun ByteArray.toFirebaseData(): Data {
     return Data(nsData)
 }
 
+/**
+ * Composable `actual` para iOS que proporciona un lanzador para la cámara.
+ *
+ * @param onImageCaptured Callback que se invoca con los bytes de la imagen capturada o `null` si la operación fue cancelada.
+ * @return Una instancia de [CameraLauncher] que puede ser usada para iniciar la cámara.
+ */
 @OptIn(ExperimentalForeignApi::class)
 @Composable
 actual fun rememberCameraLauncher(onImageCaptured: (ByteArray?) -> Unit): CameraLauncher {
@@ -155,7 +200,15 @@ actual fun rememberCameraLauncher(onImageCaptured: (ByteArray?) -> Unit): Camera
     }
 }
 
+/**
+ * Lanzador real (`actual`) para la cámara en iOS.
+ *
+ * @param onLaunch La acción a ejecutar cuando se lanza la cámara.
+ */
 actual class CameraLauncher(private val onLaunch: () -> Unit) {
+    /**
+     * Inicia la captura de una imagen con la cámara.
+     */
     actual fun capture() {
         onLaunch()
     }

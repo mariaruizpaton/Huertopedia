@@ -28,6 +28,21 @@ import org.jetbrains.compose.resources.painterResource
 import huertopedia.composeapp.generated.resources.Res
 import huertopedia.composeapp.generated.resources.logo_app
 
+/**
+ * Composable para la pantalla principal de la aplicación.
+ *
+ * Muestra una bienvenida personalizada, tarjetas de navegación a las secciones principales
+ * (Huerto, Wiki, Mapa), y la última actividad registrada en el diario de cultivo.
+ * También proporciona un menú desplegable para acceder al perfil y a la pantalla "Acerca de".
+ *
+ * @param onLogout Callback para gestionar el cierre de sesión.
+ * @param viewModel Instancia de [LoginViewModel] para acceder a los datos del usuario.
+ * @param gardenViewModel Instancia de [GardenViewModel] para acceder a los datos del huerto.
+ * @param navigateToGardenManagement Callback para navegar a la gestión del huerto.
+ * @param navigateToWiki Callback para navegar a la enciclopedia.
+ * @param navigateToProfile Callback para navegar al perfil del usuario.
+ * @param navigateToAbout Callback para navegar a la pantalla "Acerca de".
+ */
 @Composable
 fun HomeScreen(
     onLogout: () -> Unit,
@@ -192,6 +207,14 @@ fun HomeScreen(
     }
 }
 
+/**
+ * Composable reutilizable para mostrar una tarjeta de navegación en la pantalla principal.
+ *
+ * @param title El título principal de la tarjeta.
+ * @param description Una breve descripción de la funcionalidad.
+ * @param iconEmoji Un emoji representativo que se muestra en un recuadro.
+ * @param onClick La acción a ejecutar cuando se hace clic en la tarjeta.
+ */
 @Composable
 fun HomeCard(
     title: String,

@@ -25,6 +25,14 @@ import org.jetbrains.compose.resources.painterResource
 import huertopedia.composeapp.generated.resources.Res
 import huertopedia.composeapp.generated.resources.logo_app
 
+/**
+ * Composable para la pantalla "Acerca de".
+ *
+ * Muestra información sobre la aplicación, como el logo, nombre, versión, una breve descripción,
+ * los desarrolladores y enlaces al código fuente y a la política de privacidad.
+ *
+ * @param onBack Callback para gestionar la navegación hacia atrás.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(
@@ -58,17 +66,16 @@ fun AboutScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // --- HEADER: LOGO DE LA APP (AGRANDADO Y SIN FONDO) ---
+            // --- Encabezado: Logo y Nombre de la App ---
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(
-                    modifier = Modifier
-                        .size(120.dp), // Aumentado de 100 a 120
+                    modifier = Modifier.size(120.dp), 
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
                         painter = painterResource(Res.drawable.logo_app),
                         contentDescription = "Logo Huertopedia",
-                        modifier = Modifier.fillMaxSize() // Ahora ocupa todo el Box sin recortes circulares
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -87,7 +94,7 @@ fun AboutScreen(
 
             HorizontalDivider()
 
-            // --- DESCRIPCIÓN LOCALIZADA ---
+            // --- Descripción de la App ---
             Text(
                 text = strings.aboutDescription,
                 textAlign = TextAlign.Center,
@@ -95,7 +102,7 @@ fun AboutScreen(
                 color = MaterialTheme.colorScheme.onSurface
             )
 
-            // --- TARJETA DE DESARROLLADOR ---
+            // --- Tarjeta de Desarrolladores ---
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
             ) {
@@ -108,7 +115,7 @@ fun AboutScreen(
                 )
             }
 
-            // --- BOTONES DE ENLACES ---
+            // --- Botones de Enlaces Externos ---
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(
                     onClick = { uriHandler.openUri("https://github.com/mariaruizpaton/Huertopedia.git") },
@@ -129,7 +136,7 @@ fun AboutScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // --- pie de página ---
+            // --- Pie de Página ---
             Text(
                 text = strings.aboutCopyright,
                 style = MaterialTheme.typography.labelSmall,

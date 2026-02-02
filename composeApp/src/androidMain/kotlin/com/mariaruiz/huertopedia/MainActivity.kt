@@ -14,6 +14,17 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.mariaruiz.huertopedia.viewmodel.LoginViewModel
 
+/**
+ * La actividad principal de la aplicación Android.
+ *
+ * Esta clase se encarga de:
+ * - Configurar e inicializar los servicios de Firebase (Authentication y Firestore).
+ * - Gestionar el flujo de inicio de sesión con Google, incluyendo la configuración de GSO
+ *   y el manejo del resultado del lanzador de actividad.
+ * - Inyectar la lógica específica de la plataforma (como los métodos de inicio de sesión,
+ *   registro y cierre de sesión) en el [LoginViewModel] compartido.
+ * - Renderizar el composable [App] principal, que constituye la UI de la aplicación.
+ */
 @Suppress("DEPRECATION")
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -101,6 +112,17 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Configura los callbacks del [LoginViewModel] para interactuar con Firebase y Google Sign-In.
+     *
+     * Esta función conecta las acciones del usuario en la UI (manejadas por el ViewModel)
+     * con las implementaciones específicas de la plataforma Android para la autenticación.
+     *
+     * @param viewModel La instancia del [LoginViewModel] compartido.
+     * @param auth La instancia de [FirebaseAuth].
+     * @param db La instancia de [FirebaseFirestore].
+     * @param googleClient El cliente de [GoogleSignIn] para gestionar el cierre de sesión de Google.
+     */
     private fun setupLoginLogic(viewModel: LoginViewModel, auth: FirebaseAuth, db: FirebaseFirestore, googleClient: com.google.android.gms.auth.api.signin.GoogleSignInClient) {
         viewModel.onRegisterRequested = { email, password, nombre, onResult ->
             auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->

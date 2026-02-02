@@ -29,6 +29,17 @@ import com.mariaruiz.huertopedia.repositories.LanguageRepository
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 
+/**
+ * Composable para la pantalla de detalle de una planta específica.
+ *
+ * Muestra toda la información detallada de una [Plant], incluyendo su imagen, nombres,
+ * información de cultivo (siembra, recolección, etc.) en tarjetas, y secciones de texto
+ * para cuidados, plantas amigables y enemigas. Toda la información textual es localizada.
+ *
+ * @param plant El objeto [Plant] cuyos detalles se van a mostrar.
+ * @param languageRepository Repositorio para obtener el idioma actual y localizar el contenido.
+ * @param onBack Callback para navegar hacia atrás.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlantDetailScreen(
@@ -57,7 +68,7 @@ fun PlantDetailScreen(
         Column(
             modifier = Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState())
         ) {
-            // CABECERA
+            // --- Cabecera con Imagen ---
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -75,7 +86,7 @@ fun PlantDetailScreen(
             }
 
             Column(modifier = Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                // TÍTULOS LOCALIZADOS
+                // --- Títulos Localizados ---
                 Text(
                     text = plant.nombreComun.get(langCode).capitalizeFirst(),
                     style = MaterialTheme.typography.headlineLarge,
@@ -91,14 +102,13 @@ fun PlantDetailScreen(
 
                 Spacer(Modifier.height(24.dp))
 
-                // GRID DE INFORMACIÓN
+                // --- Cuadrícula de Información Clave ---
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         InfoCard(Modifier.weight(1f).fillMaxHeight(), Icons.Default.CalendarMonth, strings.detailSowing, plant.siembra.get(langCode))
                         InfoCard(Modifier.weight(1f).fillMaxHeight(), Icons.Default.Agriculture, strings.detailHarvest, plant.recoleccion.get(langCode))
                     }
                     Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        // CORRECCIÓN: plant.temperaturaOptima ya es String, no LocalizedText
                         InfoCard(Modifier.weight(1f).fillMaxHeight(), Icons.Default.Thermostat, strings.detailTemperature, plant.temperaturaOptima, Color(0xFFFF9800))
                         InfoCard(Modifier.weight(1f).fillMaxHeight(), Icons.Default.Yard, strings.detailFertilizer, plant.abono.get(langCode), Color(0xFF8BC34A))
                     }
@@ -107,7 +117,7 @@ fun PlantDetailScreen(
 
                 Spacer(Modifier.height(24.dp))
 
-                // SECCIONES DE TEXTO LARGO LOCALIZADO
+                // --- Secciones de Texto Largo ---
                 DetailSection(strings.detailCare, Icons.Default.VerifiedUser, MaterialTheme.colorScheme.primary) {
                     val text = plant.cuidados.get(langCode).ifEmpty { strings.detailNotSpecified }
                     Text(text, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -129,6 +139,15 @@ fun PlantDetailScreen(
     }
 }
 
+/**
+ * Composable reutilizable para mostrar una tarjeta de información clave en la pantalla de detalle.
+ *
+ * @param modifier Modificador para personalizar la tarjeta.
+ * @param icon Icono que representa la información.
+ * @param label Etiqueta descriptiva del dato.
+ * @param value El valor del dato a mostrar.
+ * @param iconColor Color del icono.
+ */
 @Composable
 fun InfoCard(modifier: Modifier, icon: ImageVector, label: String, value: String, iconColor: Color = Color(0xFF4CAF50)) {
     Card(modifier = modifier, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
@@ -141,6 +160,14 @@ fun InfoCard(modifier: Modifier, icon: ImageVector, label: String, value: String
     }
 }
 
+/**
+ * Composable reutilizable para una sección de texto detallado con un título e icono.
+ *
+ * @param title Título de la sección.
+ * @param icon Icono para la sección.
+ * @param color Color del icono y la línea divisoria.
+ * @param content El contenido Composable de la sección.
+ */
 @Composable
 fun DetailSection(title: String, icon: ImageVector, color: Color = Color.Gray, content: @Composable () -> Unit) {
     Column(Modifier.padding(vertical = 12.dp)) {
@@ -156,4 +183,7 @@ fun DetailSection(title: String, icon: ImageVector, color: Color = Color.Gray, c
     }
 }
 
+/**
+ * Pone en mayúscula la primera letra de una cadena de texto.
+ */
 private fun String.capitalizeFirst(): String = replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }

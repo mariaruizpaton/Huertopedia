@@ -13,22 +13,35 @@ import kotlinx.coroutines.launch
 import com.mariaruiz.huertopedia.utils.getCurrentTimeMillis
 import com.mariaruiz.huertopedia.utils.toFirebaseData
 
+/**
+ * ViewModel para gestionar el estado y las interacciones relacionadas con el "Huerto" del usuario.
+ *
+ * Se encarga de:
+ * - Observar y gestionar las jardineras (`Planter`) del usuario.
+ * - Crear, modificar y eliminar jardineras.
+ * - Gestionar las macetas (`GardenFlowerpot`) dentro de cada jardinera (plantar, recolectar, etc.).
+ * - Observar y gestionar el diario de cultivo (`CropLog`).
+ * - Cargar la lista de plantas disponibles para plantar.
+ */
 class GardenViewModel : ViewModel() {
     private val auth = Firebase.auth
     private val db = Firebase.firestore
     private val storage = Firebase.storage
 
+    // --- Flujos de Estado para la UI ---
     private val _availablePlants = MutableStateFlow<List<Plant>>(emptyList())
     val availablePlants = _availablePlants.asStateFlow()
 
     private val _planters = MutableStateFlow<List<Planter>>(emptyList())
     val planters = _planters.asStateFlow()
 
+    /**
+     * Flujo que emite la última entrada registrada en el diario de cultivo global del usuario.
+     */
     @OptIn(ExperimentalCoroutinesApi::class)
     val globalLastActivity: Flow<CropLog?> = auth.authStateChanged.flatMapLatest { user ->
         val uid = user?.uid
         if (uid != null) {
-            // SINTAXIS CORREGIDA: .where { ... } y nombre de colección 'crop_log'
             db.collectionGroup("crop_log")
                 .where { "userId" equalTo uid }
                 .orderBy("timestamp", dev.gitlive.firebase.firestore.Direction.DESCENDING)
@@ -50,6 +63,9 @@ class GardenViewModel : ViewModel() {
         observePlanters()
     }
 
+    /**
+     * Se suscribe a los cambios en la colección de jardineras del usuario actual y actualiza el estado `planters`.
+     */
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observePlanters() {
         auth.authStateChanged
@@ -76,9 +92,14 @@ class GardenViewModel : ViewModel() {
             .launchIn(viewModelScope)
     }
 
+    /**
+     * Crea una nueva jardinera en Firestore para el usuario actual.
+     * @param nombre El nombre de la jardinera.
+     * @param filas El número de filas (limitado a un máximo de 2).
+     * @param columnas El número de columnas (limitado a un máximo de 8).
+     */
     fun createPlanter(nombre: String, filas: Int, columnas: Int) {
         val uid = auth.currentUser?.uid ?: return
-        // LIMITACIÓN DE TAMAÑO: Máximo 2 filas y 8 columnas
         val finalFilas = filas.coerceIn(1, 2)
         val finalColumnas = columnas.coerceIn(1, 8)
         
@@ -95,6 +116,13 @@ class GardenViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Realiza una acción (plantar, sembrar, recolectar) sobre una o varias macetas.
+     * @param planterId El ID de la jardinera.
+     * @param positions La lista de posiciones (fila, columna) de las macetas afectadas.
+     * @param planta La planta a sembrar/plantar (null si la acción es recolectar/arrancar).
+     * @param accion La acción a realizar ("Plantar", "Sembrar", "Recolectar", "Arrancar").
+     */
     fun manageFlowerpots(planterId: String, positions: List<Pair<Int, Int>>, planta: Plant?, accion: String) {
         val uid = auth.currentUser?.uid ?: return
         viewModelScope.launch {
@@ -106,7 +134,6 @@ class GardenViewModel : ViewModel() {
                     } catch (e: Exception) { }
                 }
 
-                // Generamos el texto localizado para la acción (Guardado bilingüe)
                 val localizedAction = if (accion == "Plantar") {
                     LocalizedText(es = "Plantar", en = "Plant")
                 } else {
@@ -126,7 +153,7 @@ class GardenViewModel : ViewModel() {
                             id = potId, planterId = planterId,
                             fila = f, columna = c,
                             plantaId = planta?.id, 
-                            nombrePlanta = planta?.nombreComun, // LocalizedText
+                            nombrePlanta = planta?.nombreComun, 
                             imagenUrl = urlPublica, 
                             fechaSiembra = clockNow(),
                             tipoAccion = localizedAction 
@@ -138,6 +165,11 @@ class GardenViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Obtiene un flujo con la lista de macetas para una jardinera específica.
+     * @param planterId El ID de la jardinera.
+     * @return Un `Flow` que emite la lista de `GardenFlowerpot`.
+     */
     fun getFlowerpots(planterId: String): Flow<List<GardenFlowerpot>> {
         return auth.authStateChanged.flatMapLatest { user ->
             val uid = user?.uid
@@ -153,6 +185,11 @@ class GardenViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Obtiene un flujo con las entradas del diario de cultivo para una jardinera específica.
+     * @param planterId El ID de la jardinera.
+     * @return Un `Flow` que emite la lista de `CropLog`.
+     */
     @OptIn(ExperimentalCoroutinesApi::class)
     fun observeCropLogs(planterId: String): Flow<List<CropLog>> {
         return auth.authStateChanged.flatMapLatest { user ->
@@ -173,6 +210,11 @@ class GardenViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Añade una nueva entrada al diario de cultivo.
+     * @param log El objeto `CropLog` a añadir.
+     * @param imageBytes Un `ByteArray` opcional con una imagen para adjuntar a la entrada.
+     */
     fun addCropLogEntry(log: CropLog, imageBytes: ByteArray?) {
         val uid = auth.currentUser?.uid ?: return
         viewModelScope.launch {
@@ -192,6 +234,11 @@ class GardenViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Elimina una entrada del diario de cultivo.
+     * @param planterId El ID de la jardinera a la que pertenece la entrada.
+     * @param logId El ID de la entrada a eliminar.
+     */
     fun deleteCropLogEntry(planterId: String, logId: String) {
         val uid = auth.currentUser?.uid ?: return
         viewModelScope.launch {
@@ -203,6 +250,9 @@ class GardenViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Carga la lista completa de plantas disponibles desde la colección "plantas" de Firestore.
+     */
     fun loadAvailablePlants() {
         viewModelScope.launch {
             try {
@@ -231,6 +281,11 @@ class GardenViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Actualiza el nombre de una jardinera.
+     * @param planterId El ID de la jardinera a actualizar.
+     * @param newName El nuevo nombre para la jardinera.
+     */
     fun updatePlanterName(planterId: String, newName: String) {
         val uid = auth.currentUser?.uid ?: return
         viewModelScope.launch {
@@ -242,6 +297,10 @@ class GardenViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Elimina una jardinera y todo su contenido (macetas, diario de cultivo, etc.).
+     * @param planterId El ID de la jardinera a eliminar.
+     */
     fun deletePlanter(planterId: String) {
         val uid = auth.currentUser?.uid ?: return
         viewModelScope.launch {
@@ -252,5 +311,9 @@ class GardenViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Devuelve la marca de tiempo actual en milisegundos.
+     * @return El tiempo actual en milisegundos.
+     */
     private fun clockNow(): Long = getCurrentTimeMillis()
 }

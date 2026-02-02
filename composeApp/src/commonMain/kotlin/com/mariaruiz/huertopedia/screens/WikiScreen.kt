@@ -26,6 +26,17 @@ import com.mariaruiz.huertopedia.repositories.LanguageRepository
 import io.kamel.image.KamelImage
 import io.kamel.image.asyncPainterResource
 
+/**
+ * Composable para la pantalla de la enciclopedia (Wiki).
+ *
+ * Muestra una lista de plantas en una cuadrícula, con funcionalidades de búsqueda por texto
+ * y filtrado por categoría. El filtrado se adapta automáticamente al idioma actual.
+ *
+ * @param onBack Callback para navegar hacia atrás.
+ * @param wikiViewModel Instancia de [WikiViewModel] para obtener y filtrar los datos de las plantas.
+ * @param languageRepository Repositorio para obtener el código de idioma actual.
+ * @param onPlantClick Callback que se invoca al hacer clic en una planta, pasando el objeto `Plant` seleccionado.
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun WikiScreen(
@@ -41,14 +52,12 @@ fun WikiScreen(
     var selectedFilter by remember { mutableStateOf("Todo") }
     val plants by wikiViewModel.plants.collectAsState()
 
-    // Actualizamos el filtrado cuando cambia el texto, la categoría O el idioma
+    // Actualiza el filtrado cuando cambia el texto, la categoría O el idioma
     LaunchedEffect(searchQuery, selectedFilter, currentLangCode) {
         wikiViewModel.filterPlants(searchQuery, selectedFilter, currentLangCode)
     }
 
-    BackHandler {
-        onBack()
-    }
+    BackHandler { onBack() }
 
     Scaffold(
         topBar = {
@@ -67,6 +76,7 @@ fun WikiScreen(
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
+            // --- Controles de Búsqueda y Filtrado ---
             Column(modifier = Modifier.padding(16.dp)) {
                 OutlinedTextField(
                     value = searchQuery,
@@ -96,6 +106,7 @@ fun WikiScreen(
                     }
                 }
             }
+            // --- Cuadrícula de Plantas ---
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 modifier = Modifier.fillMaxSize(),
@@ -115,6 +126,13 @@ fun WikiScreen(
     }
 }
 
+/**
+ * Composable para mostrar una tarjeta individual de una planta en la cuadrícula de la Wiki.
+ *
+ * @param plant El objeto [Plant] a mostrar.
+ * @param langCode El código de idioma actual para mostrar el nombre y la categoría correctamente.
+ * @param onClick La acción a ejecutar cuando se hace clic en la tarjeta.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlantCard(plant: Plant, langCode: String, onClick: () -> Unit) {
