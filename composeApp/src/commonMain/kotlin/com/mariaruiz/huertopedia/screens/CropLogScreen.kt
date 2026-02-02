@@ -240,7 +240,7 @@ fun CropLogScreen(
                 title = { Text(strings.cropLogDeleteEntryTitle) },
                 text = { Text(strings.cropLogDeleteEntry) },
                 confirmButton = {
-                    Button(onClick = { logToDelete?.let { gardenViewModel.deleteCropLogEntry(it.planterId, it.id) }; showDeleteDialog = false }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) { Text(strings.gardenDelete) }
+                    Button(onClick = { logToDelete?.let { gardenViewModel.deleteCropLogEntry(it.planterId, it.id, it.photoPath) }; showDeleteDialog = false }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) { Text(strings.gardenDelete) }
                 },
                 dismissButton = { TextButton(onClick = { showDeleteDialog = false }) { Text(strings.gardenCancel) } }
             )

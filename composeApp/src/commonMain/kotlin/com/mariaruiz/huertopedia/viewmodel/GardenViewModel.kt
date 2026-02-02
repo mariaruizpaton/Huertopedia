@@ -221,8 +221,8 @@ class GardenViewModel : ViewModel() {
             try {
                 var finalLog = log.copy(userId = uid) 
                 if (imageBytes != null) {
-                    val path = "logs/${uid}_${getCurrentTimeMillis()}.jpg"
-                    val ref = storage.reference.child(path)
+                    val imagePath = "crop_logs/${log.planterId}/${log.timestamp}.jpg"
+                    val ref = storage.reference.child(imagePath)
                     ref.putData(imageBytes.toFirebaseData())
                     val url = ref.getDownloadUrl()
                     finalLog = finalLog.copy(photoPath = url)
@@ -235,18 +235,32 @@ class GardenViewModel : ViewModel() {
     }
 
     /**
-     * Elimina una entrada del diario de cultivo.
-     * @param planterId El ID de la jardinera a la que pertenece la entrada.
+     * Elimina una entrada del diario de cultivo y su foto asociada si existe.
+     * @param planterId El ID de la jardinera.
      * @param logId El ID de la entrada a eliminar.
+     * @param photoUrl La URL de la foto asociada (si tiene).
      */
-    fun deleteCropLogEntry(planterId: String, logId: String) {
+    fun deleteCropLogEntry(planterId: String, logId: String, photoUrl: String?) {
         val uid = auth.currentUser?.uid ?: return
         viewModelScope.launch {
             try {
+                // 1. Borrar el documento de Firestore (Base de datos)
                 db.collection("usuario").document(uid)
                     .collection("planters").document(planterId)
                     .collection("crop_log").document(logId).delete()
-            } catch (e: Exception) {}
+
+                // 2. Borrar la imagen de Storage (si existe URL)
+                if (!photoUrl.isNullOrBlank()) {
+                    try {
+                        val path = photoUrl.substringAfter("/o/").substringBefore("?").replace("%2F", "/")
+                        storage.reference(path).delete()
+                    } catch (e: Exception) {
+                        println("Error al borrar la imagen: ${e.message}")
+                    }
+                }
+            } catch (e: Exception) {
+                println("Error al borrar la entrada: ${e.message}")
+            }
         }
     }
 
